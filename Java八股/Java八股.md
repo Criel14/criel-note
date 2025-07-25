@@ -273,7 +273,7 @@ public class CASExample {
 
 
 
-### mysql的3中JOIN
+### mysql的3种JOIN
 
 假设数据
 
