@@ -352,5 +352,233 @@ ik_max_word 响应：
 
 
 
+## 索引库操作
 
+相当于学习数据库如何建表
+
+### mapping映射
+
+mapping是对文档内容的约束，相当于设置数据库字段的类型、是否可NULL等；
+
+#### 常见mapping属性
+
+- **type**：字段数据类型
+
+  - 常见的简单类型有
+
+    - 字符串：**text**(可分词的文本)、**keyword**(精确值，例如:品牌、国家、ip地址)
+
+    - 数值：long、integer、short、byte、double、float、布尔:boolean
+
+    - 日期：date
+
+    - 对象：object
+
+    - > 没有数组，但是允许一个字段有多个值，也就相当数组
+
+- **index**：是否创建索引
+
+  - 默认为 true，即所有字段默认都会建立**倒排索引**
+  - 实际场景中，并不会给每个字段都添加索引，不是每个字段都需要参与搜索
+
+- **analyzer**：分词器
+
+  - 决定使用哪种分词器
+
+- **properties**：字段的子字段
+
+
+
+### 创建索引库
+
+> 相当于建表
+
+基本示例：
+
+```http
+PUT /索引库名称（自定义）
+{
+  "mappings": {
+    "properties": {
+      "字段名1": {
+        "type": "text",
+        "analyzer": "ik_smart"
+      },
+      "字段名2": {
+        "type": "keyword",  # 可以指定为keyword类型，不做分词
+        "index": false
+      },
+      "字段名3": {
+      	"type": "object",
+        "properties": {
+          "子字段1": {
+            "type": "keyword"
+          },
+          "子字段2": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+
+
+### 查询索引库
+
+> 相当于查询表结构
+
+基本示例：
+
+```http
+GET /索引库名
+```
+
+
+
+### 删除索引库
+
+> 相当于删除表
+
+基本示例：
+
+```http
+DELETE /索引库名
+```
+
+
+
+### 修改索引库
+
+> ES无法像MySQL那样修改表的字段信息，只允许**添加字段**的操作
+
+ES不允许修改，可能是因为修改需要牵扯很多倒排索引的信息，而且ES一般的分布式的，修改会带来如集群状态不一致等许多问题；
+
+请求路径加上固定的`/_mapping`；
+
+添加字段示例：
+
+```http
+PUT /索引库名/_mapping
+{
+  "properties": {
+    "新字段名": {
+      "type": "integer"
+    }
+  }
+}
+```
+
+如果字段名存在，ES会认为你在尝试修改，会报错；
+
+
+
+
+
+## 文档操作
+
+### 插入文档
+
+请求路径加上固定的`/_doc`，后面加上`/文档ID`，可以不加，不加的话ES会自动生成随机的ID，一般建议加上；
+
+请求体就是文档本身对json数据；
+
+基本示例：
+
+```http
+POST /索引库名/_doc/文档ID
+{
+  "email": "123123@qq.com",
+  "info": "i am 7 years old",
+  "name": {
+      "first_name": "xiaoming",
+      "last_name": "li"
+  },
+  "new_column": "sdasdsadsadasd"
+}
+```
+
+
+
+### 查询文档
+
+```http
+GET /索引库名/_doc/文档ID
+```
+
+返回信息
+
+```json
+{
+  "_index": "my_test_index",
+  "_id": "1",
+  "_version": 1,  // 每次对同一文档进行写操作（新增、更新、删除）都会使版本号 +1，用于乐观并发控制。
+  "_seq_no": 0,  // （用于分片并发控制）全局递增的操作序号
+  "_primary_term": 1,  // （用于分片并发控制）当前主分片的“任期”编号
+  "found": true, // 是否查询到
+  "_source": {  // 插入的原始文档
+    "email": "123123@qq.com",
+    "info": "i am 7 years old",
+    "name": {
+      "first_name": "xiaoming",
+      "last_name": "li"
+    },
+    "new_column": "sdasdsadsadasd"
+  }
+}
+```
+
+
+
+
+
+### 删除文档
+
+```http
+DELETE /索引库名/_doc/文档ID
+```
+
+
+
+### 修改文档
+
+#### **全量修改**
+
+实际上：先删除旧文档，再添加新文档；若ID不存在，会变成**新增操作**
+
+> 也就是说POST和PUT都可以新增，但是PUT必须指定ID
+
+基本示例：和插入操作基本一样，请求方式换成`PUT`
+
+```http
+PUT /索引库名/_doc/文档ID
+{
+  "email": "123123@qq.com",
+  "info": "i am 7 years old",
+  "name": {
+      "first_name": "xiaoming",
+      "last_name": "li"
+  },
+  "new_column": "sdasdsadsadasd"
+}
+```
+
+
+
+#### 增量修改
+
+可以仅修改部分内容
+
+请求路径加上固定的`/_update`，后面跟上`/文档ID`；请求体中的数据包含在`doc`中
+
+```http
+POST /my_test_index/_update/1
+{
+  "doc": {
+    "email": "123456@qq.com"
+  }
+}
+```
 
