@@ -231,7 +231,7 @@ $$
 
 ```java
 // 基本写法
-public long quickPow(int num, int pow) {
+public long quickPow(long num, long pow) {
     long ans = 1;
     while (pow > 0) {
         // 奇数则需要额外乘一次
@@ -244,18 +244,18 @@ public long quickPow(int num, int pow) {
     return ans;
 }
 
-// 如果位数很大，需要取模，则在3个地方加上取模运算
-public long quickPow(int num, int pow, int mod) {
+// 如果位数很大，需要取模，则在2个地方取模（注意这里不用 *= ，必须乘完再取模，否则会溢出）
+public long quickPow(long num, long pow, long mod) {
     long ans = 1;
     while (pow > 0) {
         // 奇数则需要额外乘一次
         if ((pow & 1) == 1) {
-            ans *= num % mod;
+            ans = ans * num % mod;
         }
-        num *= num % mod;
+        num = num * num % mod;
         pow >>= 1; // 也就是 pow /= 2;
     }
-    return ans % mod;
+    return ans;
 }
 ```
 
@@ -2212,7 +2212,7 @@ https://leetcode.cn/problems/find-the-duplicate-number/
 
 ​	重点来了：由于二者步调相同，也就是说，在环的入口开始，它们其实就已经相遇了；所以第二次遍历的时候，第一次相遇的位置就是环的入口；
 
-![找到环的入口](找到环的入口.png)
+![找到环的入口](image/找到环的入口.png)
 
 ​	另外，题目的图有可能不止一个环，但是这种情况的话这个图一定就不是连通图了，而由于结点0没有结点指向，它又一定指向某个结点，所以答案那个环一定跟结点0在同一个连通分量中；
 

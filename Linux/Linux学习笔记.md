@@ -12,7 +12,7 @@ Linux没有盘符的概念，只有一个根目录`/`，所有文件都在它下
 
 路径：Windows一般用反斜杠`\`，Linux一般用斜杠`/`
 
-![linux目录结构](linux目录结构.png)
+![linux目录结构](image/linux目录结构.png)
 
 
 
@@ -608,7 +608,7 @@ drwxr-xr-x 7 criel criel 4096 Apr 24 13:53 test-docker/
 
 权限信息具体内容如下，其实就是：文件类型 + 读、写、执行权限，如果显示`-`就是没有这个权限
 
-![权限槽位](权限槽位.png)
+![权限槽位](image/权限槽位.png)
 
 具体的权限：
 
@@ -1180,7 +1180,7 @@ cd criel
 
 也可以按`ctrl` + `r`搜索历史命令，例如搜索"ch"；搜索完再按左右方向键，就可以进入正常编辑命令的模式，其实也是相当于按了很多次方向键`↑`
 
-![ctrl加r搜索历史命令](ctrl加r搜索历史命令.png)
+![ctrl加r搜索历史命令](image/ctrl加r搜索历史命令.png)
 
 
 
@@ -2065,7 +2065,7 @@ Enter password:
 
 ### 架构
 
-![docker架构](docker架构.png)
+![docker架构](image/docker架构.png)
 
 
 
@@ -2440,7 +2440,7 @@ curl my-nginx:80
 
 #### 网络模式对比
 
-![](docker网络对比.png)
+![](image/docker网络对比.png)
 
 
 

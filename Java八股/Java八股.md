@@ -202,13 +202,13 @@ public class CountDownLatchExample {
   - 主要是存放类的数据信息，父类的信息，对象字段属性信息
 - **对齐填充**
 
-![](java-对象的内存结构.png)
+![](image/java-对象的内存结构.png)
 
 
 
 ### Java对象头中的MarkWord
 
-![](jvm-对象头.png)
+![](image/jvm-对象头.png)
 
 对象头中的**MarkWord**存储了对象运行时的数据，如哈希码、GC年龄以及锁相关的信息；
 
@@ -235,7 +235,7 @@ public class CountDownLatchExample {
 
   - 如果锁竞争激烈或者发生线程阻塞，轻量级锁就会膨胀为重量级锁。在这种状态下，MarkWord中存储的内容变为**指向一个对象监视器（Monitor）的指针**。Monitor是一个更复杂的数据结构，用于管理等待队列、唤醒通知等同步机制。
 
-![](java-markword.png)
+![](image/java-markword.png)
 
 
 
@@ -435,7 +435,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
     - 数据不一致：可能出现数据库中添加上了原本不存在的数据，而缓存中还是null 
 - **布隆过滤器 Bloom Filter**
   - 底层是一个大型的二进制数组，为每个存在的key做多个hash，如图
-  - ![](redis-布隆过滤器.png)
+  - ![](image/redis-布隆过滤器.png)
   - 请求经过过滤器，先做那几个hash，如果位置全为1，就是存在，否则则不通过
   - 有可能哈希冲突，存在误判的可能，误判率与数组的大小、哈希算法等有关；增加数组大小以减少误判率则会以内存消耗为代价
   - **特点**：相比缓存空数据，内存占用少；但是存在误判
@@ -460,7 +460,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
   - 上一条操作完成前，其他线程获取互斥锁失败，直接返回过期数据
   - **特点**：高可用，性能优，不能保证数据绝对一致
 
-![](redis-缓存击穿.png)
+![](image/redis-缓存击穿.png)
 
 
 
@@ -508,11 +508,11 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 - 异步通知保证数据的最终一致性
   - 将数据发给消息队列，再延迟更新缓存
-  - ![](redis-双写一致性-MQ.png)
+  - ![](image/redis-双写一致性-MQ.png)
 
 - Canal异步通知
   - Canal是阿里的一个中间件，伪装成slave数据库，获取BinLog，将数据的变更情况通知缓存，然后更新缓存
-  - ![](redis-双写一致性-Canal.png)
+  - ![](image/redis-双写一致性-Canal.png)
   - 特点：
     - 几乎没有代码侵入，中间件直接搞定
 
@@ -533,7 +533,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
   - 原理：
     - 主进程将页表直接复制给子进程，然后子进程根据页表就可以获取内存中的数据，写入磁盘
     - 子进程执行时，将内存中的数据设置为read-only，主进程这段时间写的数据存在一个复制出来的备份中
-  - ![](redis-持久化-RDB.png)
+  - ![](image/redis-持久化-RDB.png)
 - **AOF**
   - 概念：
     - AOF全称为Append Only File(追加文件)。
@@ -541,7 +541,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
   - 使用：
     - 在配置文件`redis.conf`中开启：`appendonly yes`
     - 配置 命令记录的频率`appendonly always/everysec/no`——同步刷盘/每秒刷盘/操作系统控制，可靠性递减
-    - ![](redis-持久化-AOF配置.png)
+    - ![](image/redis-持久化-AOF配置.png)
   - 特点：
     - 会有**重写命令**的机制来缩短log，例如`set num 123; set name jack; set num 66`优化成一行`mset name jack num 666`
     - 可以配置文件大小比上次增长超过一定百分比/体积达到一定值，才触发重写
@@ -556,7 +556,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 对比如下图，一般2种配合使用
 
-![](redis-持久化-对比.png)
+![](image/redis-持久化-对比.png)
 
 
 
@@ -686,7 +686,7 @@ try {
 - **看门狗机制（Watch Dog）**：
   - 线程获得分布式锁后，（例如）Redisson会创建一个看门狗线程，它会定期检查、延长锁的过期时间（如图，默认releaseTime = 30s，所以默认每隔10s会续期一次）
   - 锁被释放后，看门狗线程就会自动停止
-  - ![](redis-分布式锁-看门狗机制.png)
+  - ![](image/redis-分布式锁-看门狗机制.png)
   - redisson中，当其他线程来的时候，如果获取锁失败，会不断**while循环**，重复一定次数；由于一般几十ms就完成一个小业务，这样的做法可以**在高并发的情况下，增加分布式锁的性能**
 
 **代码：**
@@ -723,16 +723,16 @@ try {
 - 读写分离，主节点负责写操作，从节点负责读操作（因为一般读多写少）
 - 主要发送的参数的`replid`和`offset`，slave请求同步时，master根据`offset`判断是否是第一次同步，是则采用全量同步，否则采用增量同步；
   - 具体是这样的，master中有一个**环形缓冲区**，如果`offset`在缓冲区中，则增量同步；如果不在，则说明是太久没同步或者是第一次同步，则采用全量同步
-  - ![](redis-主从同步底层.webp)
+  - ![](image/redis-主从同步底层.webp)
 
 - **全量同步**
   - 适用情况：从服务器首次连接主服务器/数据丢失后/长时间未同步
   - 过程：建立链接（同步版本信息） → 主服务器发送RDB → 主服务器发送“发送RDB”期间发生的命令日志文件
-  - ![](redis-集群-主从全量同步.png)
+  - ![](image/redis-集群-主从全量同步.png)
 - **增量同步**
   - 从断点处同步（有个offset偏移量）
   - 过程：恢复连接（获取offset） → 主服务器发送命令日志（offset之后的数据）
-  - ![](redis-集群-主从增量同步.png)
+  - ![](image/redis-集群-主从增量同步.png)
 
 
 #### **哨兵模式**
@@ -746,7 +746,7 @@ try {
     - master故障后，选择一个slave提为master
   - 服务变更通知
     - 故障转移后，通知redis客户端去连接新的主节点
-  - ![](redis-集群-哨兵模式.png)
+  - ![](image/redis-集群-哨兵模式.png)
 - **选择新的master**
   - 条件
     - 哨兵每隔1s向集群每个节点发送ping命令（心跳检测）
@@ -759,7 +759,7 @@ try {
 - **”脑裂“**
   - 就是出现**2个master**
   - master没有挂，但是master的网络与哨兵断开 → 哨兵以为master挂了 → 选择新的master → 客户端依旧在原本的master写数据 → 网络恢复 → 合并后，旧master被认为是slave，数据被删除覆盖 → 数据丢失
-  - ![](redis-集群-哨兵模式-脑裂.png)
+  - ![](image/redis-集群-哨兵模式-脑裂.png)
   - 解决：
     - 配置**最少从节点数量**`min-slaves-to-write 1; min-slaves-max-lag 10`：表示当主节点至少有 1 个从节点延迟在 10 秒以内时，才允许写操作
     - 缩短主从数据同步延迟，减少数据丢失
@@ -775,7 +775,7 @@ try {
   - 客户端**可以访问集群的任意节点**，会通过上面的路由规则，正确地将请求转发到对应结点
 - 多个master，加起来存储空间就增大了；每个master一样有多个slave，实现读写分离
 - master之间通过ping**互相监测彼此**的健康状态，不需要哨兵，每个master都是哨兵：如果某个master被其他master认为下线了，就会触发和哨兵模式一样的主从切换
-- ![](redis-集群-分片集群.png)
+- ![](image/redis-集群-分片集群.png)
 
 
 
@@ -930,7 +930,7 @@ io-threads-do-reads yes
       ```
 
   - 配置完毕之后，重新启动MVSQL服务器进行测试，查看慢日志文件中记录的信息`/var/lib/mysql/localhost-slow.log`，可以**知道具体的sql语句**，如图：
-    - ![](mysql-慢查询-慢日志.png)
+    - ![](image/mysql-慢查询-慢日志.png)
 
 #### 优化慢查询
 
@@ -977,6 +977,10 @@ io-threads-do-reads yes
 
   - 联表查询最好要以小表驱动大表（小表在外层），字段要有索引
 
+    - **小表驱动大表**：先把小表整个加载到内存（或者加载必要的数据），然后每次查找大表（一般3-4次io）
+  
+    - **大表驱动小表**：难以将整个大表加载到内存，需要很多次，每次循环都需要重新读取一次，频繁IO，而查找小表的io次数和查找大表的io次数又相差不大
+  
     - ```sql
       # 假设有customer小表，orders大表
       
@@ -987,7 +991,7 @@ io-threads-do-reads yes
       FROM customers c
       JOIN orders o ON c.customer_id = o.customer_id;
       ```
-
+  
   - 不过最好通过冗余字段的设计，避免联表查询
 
 
@@ -996,7 +1000,7 @@ io-threads-do-reads yes
 
 分析语句信息：**explain**或**desc**加上正常的select语句，查看**执行计划**，如图：
 
-![](mysql-慢查询-explain分析.png)
+![](image/mysql-慢查询-explain分析.png)
 
 关键字段：
 
@@ -1047,7 +1051,7 @@ io-threads-do-reads yes
 - 主从复制、读写分离
 - 分库分表
 
-![](mysql-优化-表和语句.png)
+![](image/mysql-优化-表和语句.png)
 
 
 
@@ -1097,14 +1101,14 @@ CREATE INDEX idx_name ON students (name);
   - 由于 B+树的节点设计通常与**磁盘块**大小相匹配（例如一个节点32位），可以使得每次磁盘读取都尽可能多地获取有用数据，降低磁盘访问次数和数据碎片化问题。
 - B+树
   - 非叶子节点只存储指针，叶子节点存储数据；叶子节点是一个**双向链表**，便于扫库和区间查询
-  - ![](mysql-索引-b+树.png)
+  - ![](image/mysql-索引-b+树.png)
   - 维持平衡的操作：分裂，上提，旋转（如果索引是自增的，那么就不会有分裂操作，吗？）
 
 
 
 #### 索引分类
 
-- ![](mysql-索引-索引分类2.png)
+- ![](image/mysql-索引-索引分类2.png)
 - **聚集索引（聚簇索引）**
   - 一定有，且只有一个
   - 将数据存储与索引保存在一起，叶子保存的是**行数据**（数据库表中的一整行）
@@ -1117,7 +1121,7 @@ CREATE INDEX idx_name ON students (name);
   - 可存在多个
   - 将数据存储与索引分开，叶子保存对应的**主键**
   - 例如下图的语句，用name索引能找到对应的id，而如果需要查询name、id以外的值，则需要**回表查询**
-  - ![](mysql-索引-索引分类.png)
+  - ![](image/mysql-索引-索引分类.png)
 - **回表查询**
   - 通过二级索引找到对应的主键值，再到聚集索引中查找整行数据
 
@@ -1241,9 +1245,9 @@ CREATE TABLE users (
 SELECT * FROM users WHERE age > 20 AND birthday = '2000-01-01';
 ```
 
-- 如果**没有索引下推**：**存储引擎**通过索引找到 `age > 20` 的记录主键，然后回表获取完整数据，再由**服务器层**过滤 `birthday = '2000-01-01'` 的条件
+- 如果**没有索引下推**：**存储引擎**通过索引找到 `age > 20` 的记录主键，然后回表获取完整数据，再由**服务器层**过滤 `birthday = '2000-01-01'` 的条件（先根据索引定位记录，再根据where过滤）
 
-- 如果**有索引下推**：**存储引擎**在扫描索引时同时应用 `age > 20` 和 `birthday = '2000-01-01'` 的条件，提前过滤不符合的记录，减少回表次数
+- 如果**有索引下推**：**存储引擎**在扫描索引时同时应用 `age > 20` 和 `birthday = '2000-01-01'` 的条件，提前过滤不符合的记录，减少回表次数（只用于二级索引，不用于主键索引）
 
 
 
@@ -1362,7 +1366,7 @@ ACID：（结合具体使用过的业务去说明）
 
 - 解决方式是设置**隔离级别**（图中的`√`或`×`表示该级别下是否可能发生对应的情况）
 
-- ![](mysql-事务-隔离级别.png)
+- ![](image/mysql-事务-隔离级别.png)
 
 - **注意：**在”**可重复读**“隔离级别下，如果是普通的`select`，每次都读同一个视图，是没有幻读问题的；但是如果加了锁，例如`for update`，就会变成当前读，读取最新的数据，这时就可能产生幻读，不过通过临键锁+间隙锁是可以解决部分幻读；
 
@@ -1370,7 +1374,7 @@ ACID：（结合具体使用过的业务去说明）
 
   - 如果查询原本没有的数据，就算加了锁，也会发生上面幻读的例子中的情况；
 
-- （上图中的**串行化**可以解决所有问题，但是性能较低，一般使用默认的可重复读）
+- > tip：上图中的**串行化**可以解决所有问题，但是性能较低，一般使用默认的可重复读；不同的隔离级别用于解决不同的并发事务问题，而“丢失更新”只能通过**加锁**来解决；
 
 - **每个连接到 MySQL 的客户端可以单独设置事务的隔离级别**，MySQL 可以使用以下 SQL 设置当前连接（客户端）的事务隔离级别：
 
@@ -1400,11 +1404,11 @@ ACID：（结合具体使用过的业务去说明）
       - 写入 redo log 的方式使用了追加操作，所以磁盘操作是**顺序写**，而直接写入数据需要先找到写入位置，然后才写到磁盘，所以磁盘操作是**随机写**。
     - **崩溃恢复**：当 MySQL **异常崩溃**或**宕机**后，MySQL 启动时会读取 Redo Log 并**重做**未完成的修改，恢复数据库状态。
     - **提高并发性能**：事务提交时，只需将 Redo Log **顺序写入磁盘**，比随机写入数据页的方式**更快**。（也就是事务提交的是Redo Log，后面再批量刷盘）
-  - ![](mysql-redolog.png)
+  - ![](image/mysql-redolog.png)
 
 - **undo log**
   - 记录的是逻辑日志，当事务回滚时，通过**逆操作**恢复原来的数据（保证**原子性和一致性**）
-  - ![](mysql-undolog.png)
+  - ![](image/mysql-undolog.png)
   - 在insert、update、delete的时候，便会产生产生便于数据回滚的日志。
     - 当**insert**的时候，产生的undo log日志只在回滚时需要，在事务提交后，**可被立即删除**。
       - （因为insert操作引入的是新数据，不存在历史版本问题）
@@ -1442,7 +1446,7 @@ ACID：（结合具体使用过的业务去说明）
   
   - 历史版本存储在undo log中，形成一个链式结构（版本链）。
   - 当事务需要根据快照读取数据时，会沿着版本链查找出符合事务快照条件的版本。
-  - ![](mysql-事务-undolog版本链.png)
+  - ![](image/mysql-事务-undolog版本链.png)
 
 ##### ReadView
 
@@ -1450,20 +1454,20 @@ ACID：（结合具体使用过的业务去说明）
 
 - 就是事务来了创建视图，而对于MVCC中的每一行，根据行的`trx_id`，比较视图里的4个字段，判断这个行是否可读；
 - 具体记录的字段如下：
-  - ![](mysql-读视图-字段.png)
+  - ![](image/mysql-读视图-字段.png)
 
 
 这保证了事务读取到的是**一致性**的数据快照。下图是“读已提交”的隔离级别下的读视图情况：（通过各个条件的判断，找到版本链中可以读的那个版本）
 
 **tip：**在RC级别下，每次读创建一个新视图；而RR级别下，会复用第一个读视图
 
-![](mysql-RC-读视图.png)
+![](image/mysql-RC-读视图.png)
 
 上图中右下角的判断，是记录中的trx_id对比readview中的字段，还可以参照下图（**图有点问题，`max_trx_id`并不是`m_ids`的最大值**）
 
 （在可重复读下，其实就是只有行的事务id是“已提交事务”，则是可见的，其他都是不可见的）
 
-![](mysql-mvcc-tri_id划分.png)
+![](image/mysql-mvcc-tri_id划分.png)
 
 上面最后一点，`trx_id >= min_trx_id` ，但是又不在`m_ids`中，说明其在快照创建前就提交了
 
@@ -1535,13 +1539,13 @@ ACID：（结合具体使用过的业务去说明）
      
        - 只存在于**RR 可重复读**隔离级别，目的是**为了解决**可重复读隔离级别下**幻读**的现象
        - 间隙锁虽然存在 X 型间隙锁和 S 型间隙锁，但是并没有什么区别，间隙锁之间是兼容的，即**两个事务可以同时持有**包含共同间隙范围的间隙锁，并不存在互斥关系，因为间隙锁的目的是防止插入幻影记录而提出的
-       - ![](mysql-间隙锁.webp)
+       - ![](image/mysql-间隙锁.webp)
      
      - **Next-Key Lock 临键锁**：Record Lock + Gap Lock 的组合，锁定一个范围，给记录之间的一个间隙加锁，并且锁定记录本身。
      
        - 即能保护该记录，又能阻止其他事务将新纪录插入到被保护记录前面的间隙中，同样是**为了解决幻读**；
        - 在**串行化**的隔离级别下，普通的`select`语句就会加上临键锁，在其他隔离级别下，需要手动加上`for update`
-       - ![](mysql-临键锁.webp)
+       - ![](image/mysql-临键锁.webp)
 
      - 后面2个都是为了防止幻读，例子如下：
 
@@ -1712,7 +1716,7 @@ binlog：
 2. 从库读取主库的二进制日志文件 Binlog ，写入到从库的**中继日志 Relay Log**
 3. slave重做中继日志中的事件，将改变反映它自己的数据。
 
-![](mysql-主从同步过程.png)
+![](image/mysql-主从同步过程.png)
 
 
 
@@ -1910,7 +1914,7 @@ public void method() {
 }
 ```
 
-![](spring-事务传播行为.png)
+![](image/spring-事务传播行为.png)
 
 具体：
 
@@ -2078,11 +2082,55 @@ public void method() {
      - **实现 BeanFactoryAware**：使 Bean 获得对创建它的 BeanFactory 的引用，从而可以进行依赖查找等操作，同样通过set方法，将容器的的实例传入；
 
 5. **BeanPostProcessor 处理 - 初始化前**
+   
    - 容器会调用所有实现了 `BeanPostProcessor` 接口的类中的 `postProcessBeforeInitialization` 方法，这一步允许在 bean 初始化之前对 bean 进行加工处理（就是实现了就处理实现的方法里写的代码，没实现就不用了）
+   
+   - ```java
+     @Component
+     public class CustomBeanPostProcessor implements BeanPostProcessor {
+     
+         // 初始化前处理：这里可以添加一些前置处理逻辑
+         @Override
+         public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+             // 假设要处理某个bean
+             if (bean instanceof MyBean) {
+                 ... // 执行处理逻辑
+             }
+             return bean;
+         }
+     
+         // 初始化后处理：这里可以添加一些后置处理逻辑
+         @Override
+         public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+             // 此处可根据需要添加处理逻辑
+             return bean;
+         }
+     }
+     ```
 6. **初始化方法(InitializingBean、init-method)**
+   
    - 如果 bean 实现了 `InitializingBean` 接口，则会调用其 `afterPropertiesSet()` 方法。
    - 如果在配置中指定了 `init-method`，则会调用对应的方法（**自定义初始化方法**）。
-   - 还可以使用注解 `@PostConstruct` 标注初始化方法。
+   - 还可以使用注解 `@PostConstruct` 标注初始化方法。使用策略模式时，会常用；
+   
+     - ```java
+       @Component
+       public class MyStrategyBean {
+           
+           // 用于存储不同策略
+           private Map<String, String> strategyMap = new HashMap<>();
+           
+           // @PostConstruct注解确保依赖注入完成后执行此方法初始化Map
+           @PostConstruct
+           public void init() {
+               strategyMap.put("key1", "策略1执行");
+               strategyMap.put("key2", "策略2执行");
+               System.out.println("【MyStrategyBean】@PostConstruct方法初始化Map完成");
+           }
+           
+       	...
+       }
+       ```
    - （这一阶段主要用于完成 bean 的最终初始化工作，比如资源准备等）
 7. **BeanPostProcessor 处理 - 初始化后**
    - 调用 `BeanPostProcessor` 中的 `postProcessAfterInitialization` 方法，此时 bean 已经完全初始化，可以进行**代理包装**等操作（AOP等）
@@ -2093,13 +2141,13 @@ public void method() {
    - 如果配置了 `destroy-method` 或使用了 `@PreDestroy` 注解标记**销毁方法**，则也会被调用。
    - （这一步主要用于释放资源，如关闭连接、清理缓存等）
 
-![](Spring-bean生命周期.png)
+![](image/Spring-bean生命周期.png)
 
 非单例和单例是不同的，具体如下：
 
 - 非单例模式下，Spring创建Bean后交给使用者，不会再管理后续的生命周期（容器不管理销毁）
 
-![](Spring-bean生命周期-单例和非单例.png)
+![](image/Spring-bean生命周期-单例和非单例.png)
 
 
 
@@ -2108,7 +2156,7 @@ public void method() {
 #### 循环依赖的产生
 
 - 例如`A`中用`@Autowired`注入`B`，同时`B`中也用`@Autowired`注入`A`
-- ![](Spring-循环依赖产生.png)
+- ![](image/Spring-循环依赖产生.png)
 
 #### Spring三级缓存
 
@@ -2122,16 +2170,16 @@ Spring Boot **2.6+** 默认**禁止循环依赖**，即 `spring.main.allow-circu
 
     **三级缓存（singletonFactories）：** 存放对象工厂，用于创建 bean 的“早期引用”。当遇到循环依赖时，如果当前 bean 正在创建中，Spring 会通过对象工厂从三级缓存中获取一个早期引用，从而完成依赖注入。
 
-  - ![](Spring-三级缓存.png)
+  - ![](image/Spring-三级缓存.png)
 
 - **一二级缓存**一起用，可以解决**一般对象**的循环依赖，不能解决[代理对象](#代理对象)的循环依赖
 
-  - ![](Spring-使用二级缓存.png)
+  - ![](image/Spring-使用二级缓存.png)
   - 总之就是先注入半成品
 
 - 使用**三级缓存**，解决**代理对象和一般对象**的循环依赖
   - 需要使用[对象工厂](#对象工厂)，如果完全不使用对象工厂，那么在循环依赖场景下就没有办法提前暴露 bean 的引用，从而导致循环依赖无法被正常解决。
-  - ![](Spring-使用三级缓存.png)
+  - ![](image/Spring-使用三级缓存.png)
   - 也是先注入半成品，只不过是用对象工厂生成半成品
 
 #### 需要手动解决的循环依赖问题
@@ -2186,12 +2234,12 @@ public class ServiceB {
     9. ViewReslover解析后返回具体**View(视图)**
     10. DispatcherServet根据View进行渲染视图(即将模型数据填充至视图中)
     11. DispatcherServlet响应用户
-  - ![](Springmvc-jsp.png)
+  - ![](image/Springmvc-jsp.png)
 - **前后端分离阶段**
   - 前步和上面一样，找到Controller后：
     1. 方法上添加了**@ResponseBody**
     2. 通过**HttpMessageConverter(Http信息转换器)**来返回结果转换为JSON并响应
-  - ![](Springmvc-前后端分离.png)
+  - ![](image/Springmvc-前后端分离.png)
 
 
 
@@ -2231,7 +2279,7 @@ public class ServiceB {
   - 自动配置类的信息存放在各个依赖的 jar 包中的 `META-INF/spring.factories` 文件中（spring 2.x）。文件格式为标准的 Properties 格式，其中 key 为接口或抽象类的全限定名（这里为 `org.springframework.boot.autoconfigure.EnableAutoConfiguration`），value 为以逗号分隔的自动配置类全限定名列表。
   - **SpringFactoriesLoader** 会扫描类路径下所有 jar 包的 `META-INF/spring.factories` 文件，并将所有匹配 key 的值合并后返回。这一机制使得各个 Starter 模块都可以轻松地将自己的自动配置类注册到 Spring Boot 的自动配置体系中。
   - （tip：在 **Spring Boot 3** 中，自动配置机制做了一项重要调整：[自动配置类的加载文件](#自动配置类加载文件)从原来的 `META-INF/spring.factories` 改为 **`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`**。）
-    - ![](springboot3自动配置.png)
+    - ![](image/springboot3自动配置.png)
 
 - **starter模块**
   - Spring Boot 的 Starter 模块**将各种自动配置类打包**在一起，开发者只需要引入相应的 Starter 依赖即可启用对应的自动配置。例如，`spring-boot-starter-web` 就包含了与 Spring MVC、嵌入式服务器等相关的自动配置类。
@@ -2466,7 +2514,7 @@ com.example.autoconfig.OtherAutoConfiguration
 6. 输入参数映射
 7. 输出结果映射
 
-![](mybatis-执行流程.png)
+![](image/mybatis-执行流程.png)
 
 
 
@@ -2493,13 +2541,13 @@ mybatis支持延迟加载，但**默认没有开启**
 
 ​	也就是：执行`User user = userMapper.selectById(id)`的时候，不查询`orderList`，等到执行`user,getOrderList()`的时候，再去查询`orderList`
 
-![](mybatis-延迟加载.png)
+![](image/mybatis-延迟加载.png)
 
 **原理：**
 
 ​	其实就是用**CGLIB**创建一个**代理对象**，再调用get方法的时候，判断对应值是否为null，再去执行sql
 
-![](mybatis-延迟加载-原理.png)
+![](image/mybatis-延迟加载-原理.png)
 
 **使用：**
 
@@ -2636,7 +2684,7 @@ mybatis支持延迟加载，但**默认没有开启**
 - **生命周期**
    当 SqlSession 关闭后，其一级缓存也会被清空。这意味着不同的 SqlSession 之间并不会共享一级缓存数据。
 - 例子如下（注意是同一个`sqlSession`查询的才可以）
-  - ![](mybatis-一级缓存.png)
+  - ![](image/mybatis-一级缓存.png)
   - 关于getMapper:
     - 用 `getMapper` 时，MyBatis 利用动态代理生成 **Mapper 接口的代理对象**。代理对象在调用方法时，会查找对应的 MappedStatement，并委托给 SqlSession（进一步通过 Executor）来执行 SQL，最后将结果返回给用户。
 
@@ -2719,7 +2767,7 @@ mybatis支持延迟加载，但**默认没有开启**
     - **Sentinel：** 阿里巴巴推出的流量控制和容错组件，支持熔断、限流、降级等功能，尤其适用于复杂业务场景。
     - **Resilience4j：** 作为Hystrix的现代替代品，设计轻量、集成简单，是目前较推荐的解决方案。
 
-![](springcloud-五大组件.png)
+![](image/springcloud-五大组件.png)
 
 其他：**配置中心**、消息总线与事件驱动、分布式跟踪等
 
@@ -2743,7 +2791,7 @@ mybatis支持延迟加载，但**默认没有开启**
 - **服务消费者**拉取服务
 - **nacos**推送变更消息
 
-![](springcloud-nacos.png)
+![](image/springcloud-nacos.png)
 
 
 
@@ -2767,7 +2815,7 @@ tip：从 Spring Cloud 2020 版本开始，Spring Cloud 已经逐步将 Ribbon �
 
 流程以**Ribbon**为例：
 
-![](springcloud-ribbon.png)
+![](image/springcloud-ribbon.png)
 
 Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
@@ -2781,7 +2829,7 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
 选择负载均衡策略的方法：
 
-![](springcloud-ribbon-选择策略.png)
+![](image/springcloud-ribbon-选择策略.png)
 
 
 
@@ -2822,11 +2870,11 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
     - 可以配置单个IP最多持有多少个连接、某个服务的最大并发连接数
   - 漏桶算法
     - 可以在Nginx中配置限流对象、存储区空间、桶大小、最大请求处理速率，快速处理/丢弃
-    - ![](微服务业务-漏桶算法.png)
+    - ![](image/微服务业务-漏桶算法.png)
 - **网关**
   - 配置局部过滤器**RequestRateLimiter**，底层使用令牌桶算法
     - 配置例子：
-    - ![](微服务业务-网关限流.png)
+    - ![](image/微服务业务-网关限流.png)
 
 
 
@@ -2834,7 +2882,7 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
 CAP 定理（Consistency、Availability、Partition tolerance）由 Eric Brewer 教授提出，并由 Gilbert 和 Lynch 从理论上证明，其核心主张是：**一个分布式系统最多只能同时满足一致性、可用性、分区容错性三个特性中的两项。**
 
-![](微服务业务-CAP.png)
+![](image/微服务业务-CAP.png)
 
 - **Consistency 一致性** 
   - 所有节点在同一时刻看到的数据是相同的；
@@ -2845,7 +2893,7 @@ CAP 定理（Consistency、Availability、Partition tolerance）由 Eric Brewer 
 
 - **Partition Tolerance 分区容错性** 
   - 即使系统中的部分节点因网络故障而无法通信，整体系统仍能运行；
-  - ![](微服务业务-CAP-分区容错.png)
+  - ![](image/微服务业务-CAP-分区容错.png)
 
 当因为网络故障出现分区时，以上图为例，用户访问node01和node03数据不一致，可以等待网络恢复来保证**一致性**，也可以直接返回来保证**可用性**，二者不可得兼；上述2种情况即**CP**和**AP**，在网络的环境下，**P必然有可能出现**，所有一般就是上面的2种情况了；
 
@@ -2878,7 +2926,7 @@ BASE 理论是CAP的一种解决思路，可以看作是对 CAP 定理中“一�
 - MQ消息重复
 - 应用使用失败或超时的重试机制
 
-![](微服务业务-接口幂等.png)
+![](image/微服务业务-接口幂等.png)
 
 常见解决方案
 
@@ -2888,7 +2936,7 @@ BASE 理论是CAP的一种解决思路，可以看作是对 CAP 定理中“一�
   - 解决新增、修改操作
   - 思考：一样是token + redis，但是和12306项目里的令牌大闸不太一样，那个是限制了一定时间内用户的重复提交，这个应该更好一点
   - **基本流程：**服务端在用户创建订单时创建并返回token，提交订单时接收token，验证token是否存在并处理业务；如果接收的token不存在，说明业务已经在处理了，不重复操作
-  - ![](微服务业务-接口幂等-token-redis.png)
+  - ![](image/微服务业务-接口幂等-token-redis.png)
 - **分布式锁**
   - 解决新增、修改操作
   - 视频里讲的不太清楚...还是记上面那个就好了
@@ -3226,7 +3274,7 @@ fos.close();
 
 ArrayList中的元素就保存于：`transient Object[] elementData;`
 
-![](java-数组内存.png)
+![](image/java-数组内存.png)
 
 #### 构造方法
 
@@ -3408,7 +3456,7 @@ List<Integer> list1 = new ArrayList<>(Arrays.asList(arr)); // 可变的 List
 
 tip：红黑树节点中包含一个指向父节点的属性，用来旋转操作
 
-![](https://oi-wiki.org/ds/images/rbtree-example.svg)
+![](image/https://oi-wiki.org/ds/images/rbtree-example.svg)
 
 - 基本特性
 
@@ -3427,7 +3475,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
   - 旋转是**O(1)**
 - 添加节点规则
   - 添加的节点**默认是红色**的
-  - ![](红黑树-添加节点规则.png)
+  - ![](image/红黑树-添加节点规则.png)
 
 
 
@@ -3478,7 +3526,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
       - 进入**链表**后：尾插法，然后判断链表长度是否 **>=** 8（图里错的，看了源码就是`>=`），是则执行`treeifyBin`，里面判断当前容量是否 **>= 64**，是则转为红黑树，否则执行`resize()`扩容
       - 进入**红黑树**后：直接按照红黑树的逻辑添加节点
     - 添加完成后，判断当前大小是否 > 需要扩容的最小容量，是则最后执行一次`resize()`，然后结束
-    - ![](HashMap-添加数据流程.png)
+    - ![](image/HashMap-添加数据流程.png)
 
 - **get过程**
 
@@ -3502,7 +3550,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
     - 重新**判断是否需要树化/链表化**：
       - 如果链表的长度 **小于等于阈值`UNTREEIFY_THRESHOLD`（值为6，即<=6）**，则将链表放入新数组中的对应位置（退化为链表，或者说其实在扩容过程中就是先把红黑树先拆成链表）。
       - 如果链表的长度 **大于阈值`UNTREEIFY_THRESHOLD`（值为6，即>6）**，则将链表重新树化为红黑树。
-  - ![](HashMap-扩容流程.png)
+  - ![](image/HashMap-扩容流程.png)
 
 
 
@@ -3718,7 +3766,23 @@ public enum State {
 
 **状态转换过程**如下图：（图中使用`notify()`后还需要去重新尝试获得锁）
 
-![](并发编程-线程状态转换.png)
+![](image/并发编程-线程状态转换.png)
+
+#### JVM 线程状态 与 操作系统阻塞机制的对照
+
+操作系统层面：
+
+- 当线程被阻塞时，会从**用户空间**进入**内核空间**，接着被放入**阻塞队列**
+  - 阻塞队列就在内核空间中，此时线程**不再占用CPU资源**，但**仍然占用内存资源**
+- 所谓的”进入内核空间“，实际上是把线程的PC、寄存器数据等保存到内核空间，而线程的本地存储、用户栈等还会溜在用户空间
+
+| **JVM 线程状态**         | **触发条件**                       | **是否触发系统阻塞？**    | **对应 OS 行为**                                       |
+| ------------------------ | ---------------------------------- | ------------------------- | ------------------------------------------------------ |
+| BLOCKED                  | `synchronized`竞争锁               | 否                        | JVM 内部逻辑挂起，操作系统不参与                       |
+| WAITING                  | `wait()` / `park()` 等显式等待方法 | 一般否                    | JVM 内部挂起，操作系统不参与                           |
+| TIMED_WAITING (含 sleep) | `sleep(timeout)` 等带超时方法      | 是（如 `sleep` 一定触发） | 进入内核等待队列，直到时间到触发唤醒 → 就绪 → 复用 CPU |
+
+
 
 #### 关于`wait(),notify()`等方法
 
@@ -4047,6 +4111,11 @@ public class WaitNotifyExample {
 
 synchronized**对象锁**采用**互斥**的方式让同一时刻**至多只有一个线程**能持有对象锁，其它线程再想获取这个**对象锁**时就会阻塞
 
+- 使用的锁对象
+  - 普通同步方法：锁`this`
+  - 静态同步方法：锁`class对象`
+  - 同步代码块：自己指定
+
 - synchronized底层是对象监视器**Monitor**
   - Monitor是一个**运行时数据结构**，用于实现线程的阻塞、唤醒和等待通知机制
     - JVM在**本地(C++)堆**上分配一个 `ObjectMonitor` 结构（即Monitor），并将 MarkWord 更新为指向该结构的指针
@@ -4056,8 +4125,8 @@ synchronized**对象锁**采用**互斥**的方式让同一时刻**至多只有�
     - **WaitSet**：synchronized中调用了`wait()`进入等待的线程（等待队列）
     - **EntryList**：获取锁失败，被阻塞的线程（阻塞队列）
     - **Owner**：当前持有锁的线程，有且只有一个
-  - ![](并发编程-synchronized-monitor.png)
-  
+  - ![](image/并发编程-synchronized-monitor.png)
+
 - 每个对象在需要时会**隐式地关联一个监视器锁**
   - Monitor在**重量级锁**时才会创建；
   - 在Java对象头的[MarkWord](#Java对象头中的MarkWord)中，会**保存有指向一个对象监视器（Monitor）的指针**，这样就关联上了
@@ -4163,7 +4232,7 @@ JMM：
 - JMM 将内存抽象为两大部分：
   - **主内存/共享内存**：存储所有共享变量（实例变量、静态变量等），对所有线程都可见。
   - **工作内存/本地内存**：每个线程拥有自己的私有内存（类似 CPU 缓存），用于保存它从主内存中拷贝的**共享变量副本**。
-  - ![](jmm.png)
+  - ![](image/jmm.png)
   - 线程**对共享变量的所有操作**都必须**在工作内存中**进行，**操作完成后再同步**到主内存。
   - 线程与线程之间**相互隔离**，如果线程间需要**通信**，必须**通过主内存**来进行。
 - JMM 使用 **happens-before** 规则来描述操作之间的先行发生关系，即如果操作 A happens-before 操作 B
@@ -4206,6 +4275,11 @@ CAS的缺点：
 - **线程间的可见性**
 
   - 当一个变量被多个线程共享时，每个线程可能会把这个变量缓存在自己的工作内存中，而不是直接读取主内存。
+
+    - **更底层**：现代GPU一般是 多核 + 多级缓存，一般读取数据的顺序为：**寄存器 → L1缓存 → L2缓存 → L3缓存 → 主内存**；由于每个CPU核心都有自己的L1缓存，会出现缓存一致性的问题；
+    - 当操作一个volatile变量时，线程会绕过缓存，直接与主内存交互，具体来说：
+      - 操作**普通变量**：变量从主存读入工作内存（缓存、寄存器等），之后再写回主内存；
+      - 操做**volatile变量**：写时将工作内存的值刷新到主内存，读时直接读取主内存中的数据；
 
   - 使用 volatile 关键字后，每次读取该变量时都会**直接从主内存中获取**，而写入时也会立刻刷新到主内存。这样可以确保各个线程都能看到变量的最新状态
 
@@ -4281,7 +4355,7 @@ CAS的缺点：
 
 AQS和synchronized：
 
-![](并发编程-aqs和synchronized.png)
+![](image/并发编程-aqs和synchronized.png)
 
 常见实现类：
 
@@ -4293,7 +4367,7 @@ AQS和synchronized：
 
 - AQS 使用 **volatile int 成员变量 `state` **表示同步状态，通过内置的 **FIFO 双向链表队列（等待队列）** 来完成获取资源线程的排队工作
 
-  - ![](并发编程-AQS原理示意.png)
+  - ![](image/并发编程-AQS原理示意.png)
 
   - ```java
     // 共享变量，使用volatile修饰保证线程可见性
@@ -4308,6 +4382,51 @@ AQS和synchronized：
 - 如果获取不到锁，线程就会去到队列中进行等待；每个进入等待队列的线程都会被封装成一个 Node。节点中记录了**线程的引用（thread）、 当前节点在队列中的状态（waitStatus）、前驱节点（prev）、后继节点（next）**
 
 - 可以实现[公平锁](#公平锁与非公平锁)，也可以实现[非公平锁](#公平锁与非公平锁)
+
+关于锁的拥有者：
+
+- AQS中，**锁的拥有者并不会在等待队列中**；
+- 实际上AQS有一个父类：`AbstractOwnableSynchronizer`，这个类里通过`exclusiveOwnerThread`属性来存储锁的拥有者；这个类并不大：
+
+```java
+package java.util.concurrent.locks;
+
+public abstract class AbstractOwnableSynchronizer
+    implements java.io.Serializable {
+
+    private static final long serialVersionUID = 3737899427754241961L;
+
+    protected AbstractOwnableSynchronizer() { }
+
+    private transient Thread exclusiveOwnerThread;
+
+    protected final void setExclusiveOwnerThread(Thread thread) {
+        exclusiveOwnerThread = thread;
+    }
+
+    protected final Thread getExclusiveOwnerThread() {
+        return exclusiveOwnerThread;
+    }
+}
+```
+
+- 在`ReentrantLock`中，通过下面的代码获取锁的拥有者：
+
+```java
+public class ReentrantLock implements Lock, java.io.Serializable {
+    ...
+
+    abstract static class Sync extends AbstractQueuedSynchronizer {
+        ...
+        protected final boolean isHeldExclusively() {
+            return getExclusiveOwnerThread() == Thread.currentThread();
+        }
+        ...
+    }
+
+    ...
+}
+```
 
 AQS 定义两种资源共享方式：
 
@@ -4448,11 +4567,11 @@ Lock与synchronized：
   - 数据结构：
     - 分段数组 + 链表，数组包括Segment + HashEntry
     - `Segment` 的个数一旦**初始化就不能改变**，默认 `Segment` 的个数是 16 个
-    - ![](并发编程-ConcurrentHashMap-jdk7.png)
+    - ![](image/并发编程-ConcurrentHashMap-jdk7.png)
   - 锁
     - 底层使用`ReentrantLock`
     - 采用Segment**CAS分段锁**，每一个 Segment 上同时只有一个线程可以操作
-    - ![](并发编程-ConcurrentHashMap-jdk7-锁.png)
+    - ![](image/并发编程-ConcurrentHashMap-jdk7-锁.png)
   
 - **JDK1.8**
   - 数据结构
@@ -4471,7 +4590,7 @@ Lock与synchronized：
       - **CAS 方式初始化数组**（table 未初始化时）：使用 `compareAndSet()` 进行原子操作，确保只有一个线程可以创建 `table`
       - 如果目标槽位为空，直接使用 `CAS` 方式放入元素，避免加锁
       - 如果目标槽位不为空，则使用 `synchronized(f)` 锁住当前桶的**头节点f**，再进入链表/红黑树
-      - ![](并发编程-ConcurrentHashMap-jdk8-锁.png)
+      - ![](image/并发编程-ConcurrentHashMap-jdk8-锁.png)
     - `get`操作
       - 采用**无锁读取**
       - ConcurrentHashMap 中的核心数组字段 table 声明为 **`volatile`**,这意味着当 get 方法读取 table 时，JVM 会保证最新的数组状态**对所有线程可见**
@@ -4509,7 +4628,7 @@ Lock与synchronized：
 - **jps + jstack**
   - 命令行工具，可以输出Java进程中所有线程的堆栈信息，分析线程之间的锁持有情况，快速定位死锁。使用方法示例：
     - `jsp`命令获取线程的id，`jstack -l <id>`得到日志，翻到最后面
-  - ![](并发编程-死锁诊断-jps-jstack.png)
+  - ![](image/并发编程-死锁诊断-jps-jstack.png)
 
 **死锁避免：**
 
@@ -4527,8 +4646,14 @@ Lock与synchronized：
 #### Java并发编程三大特性
 
 - **原子性**
-  - 和数据库的原子性不太一样，这里指的是**一个线程在执行的过程中不会被其他线程打断；**
-  - 使用`sychronized`，`lock`
+  - 和数据库的原子性不太一样
+  - 有说法是：**一个线程在执行的过程中不会被其他线程打断；**
+  - 更多的说是：**强调对单个内存（变量）或临界区（代码块）的操作在多线程下不可再分割地执行**
+    - 例如 `AtomicInteger` 对单个 `int` 的原子更新；`synchronized` 对块/对象的互斥
+  - 普通原子操作**没有自动回滚**概念。若执行一半抛异常，内存中已经改写的值不会自动恢复
+  - 例子：
+    - `volatile` 能保证 `count++` 的线程安全。
+    - `count++` 不是原子操作（读-改-写 三步），`volatile` 只保证可见性，不保证原子性；需要 `AtomicInteger` 或 `synchronized`
 - **可见性**
   - 当一个线程对共享变量进行修改后，另外一个线程可以立即看到该变量修改后的最新值
   - 使用`volatile`，`sychronized`，`lock`
@@ -4583,7 +4708,7 @@ Lock与synchronized：
 7. **`handler`（拒绝策略）**
    - 当线程池**满了**并且**任务队列也满了**，新任务会执行拒绝策略：
      - 这些拒绝策略都是`ThreadPoolExecutor`的**静态内部类**
-   - ![](并发编程-线程状-任务拒绝策略.png)
+   - ![](image/并发编程-线程状-任务拒绝策略.png)
 
 ```java
 import java.util.concurrent.*;
@@ -4633,7 +4758,7 @@ public class ThreadPoolExecutorExample {
   - 等待队列满了之后，会创建临时线程去执行任务
   - 最大线程数也满了之后，会根据拒绝策略处理新提交的任务
 
-![](并发编程-线程池工作流程.png)
+![](image/并发编程-线程池工作流程.png)
 
 
 
@@ -4656,7 +4781,7 @@ public class ThreadPoolExecutorExample {
 
 以上二者的区别总结：
 
-![](并发编程-线程状-ArrayBlockingQueue的LinkedBlockingQueue区别.png)
+![](image/并发编程-线程状-ArrayBlockingQueue的LinkedBlockingQueue区别.png)
 
 其他阻塞队列：
 
@@ -4754,7 +4879,7 @@ public class ThreadPoolExecutorExample {
     // 提交5个任务
     for (int i = 0; i < 5; i++) {
         final int taskId = i;
-       	threadPool.execute(() -> {
+        threadPool.execute(() -> {
             System.out.println(Thread.currentThread().getName() + " 正在执行任务 " + taskId);
             try {
                 Thread.sleep(800);
@@ -4970,9 +5095,14 @@ public class ResourceService {
 
 也就是说，其实`CompletableFuture`本身是**异步**的，是通过`join()`方法实现了线程同步；
 
-而且，如果没有指定线程池，`runAsync(...)` 默认使用的 `ForkJoinPool.commonPool()` 中的**守护线程**执行异步任务，而 JVM 在只剩守护线程时会直接退出，导致主线程一结束，异步任务可能还未打印就被终止；
+**指定线程池：**
 
-可用`CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> task("Task-1"), myExecutor);`指定自己的线程池；
+- 如果没有指定线程池，`runAsync(...)` 默认使用的 `ForkJoinPool.commonPool()` 中的**守护线程**执行异步任务，而 JVM 在只剩守护线程时会直接退出，导致主线程一结束，异步任务可能还未打印就被终止；
+
+  - > 假设不`.join()`，有可能主线程已经执行到了后面的`println`，而 `CompletableFuture` 开启的任务却还没有执行完，由于并不会阻塞等待，这时候程序就直接结束了；
+
+- 可用`CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> task("Task-1"), myExecutor);`**指定自己的线程池**；
+
 
 ```java
 public class TestJava {
@@ -5057,57 +5187,6 @@ public class ThreadInTurn {
 
 ### ThreadLocal
 
-#### ThreadLocal底层原理
-
-ThreadLocal是多线程中对于解决线程安全的一个操作类，它会为每个线程都分配一个独立的线程副本从而解决了变量并发访问冲突的问题。ThreadLocal同时实现了线程内的资源共享。
-
-- **单个 ThreadLocal 对象只能保存一个值**：
-  - 当对同一个 ThreadLocal **调用 `set()` 多次**时，实际上会**更新**该 ThreadLocal 对应的那一个 Entry 的 value，而不会在数组中插入新的 Entry。也就是说，一个 ThreadLocal 对象在一个线程中只能有一个关联的值。
-- **每个 ThreadLocal 对象对应一个 Entry**：
-  - 如果在同一个线程中创建了多个不同的 ThreadLocal 对象，那么它们会分别以不同的 Entry 存储在 ThreadLocalMap 的数组中。每个 Entry 都独立地保存着各自的值。
-
-每个线程有自己的 **ThreadLocalMap**属性，每个线程在创建时，会在自己的 **Thread 对象**中拥有一个成员变量（通常叫做 threadLocals），这个变量就是 ThreadLocalMap 的实例；
-
-```java
-// 在Thread类中有如下ThreadLocalMap属性，默认为null
-ThreadLocal.ThreadLocalMap threadLocals = null;
-
-// 在第一次添加数据时，会调用createMap方法new一个对象
-void createMap(Thread t, T firstValue) {
-    t.threadLocals = new ThreadLocalMap(this, firstValue);
-}
-```
-
-![](ThreadLocal数据结构.png)
-
-ThreadLocalMap 的底层是一个 **Entry 数组**，每个 Entry 对象都表示一个键值对，采用**开放地址法 + 线性探测（Linear Probing）策略**来处理哈希冲突，即从冲突位置向后遍历找到可插入位置
-
-- **键（key）是一个 ThreadLocal 对象**（通过**弱引用WeakReference**保存）
-- 值（value）则是对应线程的局部变量数据。
-
-```java
-static class Entry extends WeakReference<ThreadLocal<?>> {
-    /** The value associated with this ThreadLocal. */
-    Object value;
-
-    // key是ThreadLocal<?>，value是Object
-    Entry(ThreadLocal<?> k, Object v) {
-        super(k);
-        value = v;
-    }
-}
-
-// Entry数组
-private Entry[] table;
-```
-
-**注意：**
-
-- ThreadLocalMap作为成员变量存放在**堆**中，而不是在[JMM](#JMM)的**“工作内存”**中。
-- 比较特别的是：`ThreadLocalMap` 的 `set()` 和 `createMap()` 方法中，**并没有直接存储 `ThreadLocal` 对象本身，而是使用 `ThreadLocal` 的哈希值计算数组索引！**
-
-
-
 #### ThreadLocal常见方法
 
 这些方法底层很多都调用了C/C++实现的方法，例如`remove()`最终会调用到`private native void clear0()`方法
@@ -5161,9 +5240,74 @@ private Entry[] table;
 
 
 
+#### ThreadLocal底层原理
+
+ThreadLocal是多线程中对于解决线程安全的一个操作类，它会为每个线程都分配一个独立的线程副本从而解决了变量并发访问冲突的问题。ThreadLocal同时实现了线程内的资源共享。
+
+- **单个 ThreadLocal 对象只能保存一个值**：
+  - 当对同一个 ThreadLocal **调用 `set()` 多次**时，实际上会**更新**该 ThreadLocal 对应的那一个 Entry 的 value，而不会在数组中插入新的 Entry。也就是说，一个 ThreadLocal 对象在一个线程中只能有一个关联的值。
+- **每个 ThreadLocal 对象对应一个 Entry**：
+  - 如果在同一个线程中创建了多个不同的 ThreadLocal 对象，那么它们会分别以不同的 Entry 存储在 ThreadLocalMap 的数组中。每个 Entry 都独立地保存着各自的值。
+
+每个线程有自己的 **ThreadLocalMap**属性，每个线程在创建时，会在自己的 **Thread 对象**中拥有一个成员变量（通常叫做 threadLocals），这个变量就是 ThreadLocalMap 的实例；
+
+```java
+// 在Thread类中有如下ThreadLocalMap属性，默认为null
+ThreadLocal.ThreadLocalMap threadLocals = null;
+
+// 在第一次添加数据时，会调用createMap方法new一个对象
+void createMap(Thread t, T firstValue) {
+    t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
+
+![](image/ThreadLocal数据结构.png)
+
+ThreadLocalMap 的底层是一个 **Entry 数组**，每个 Entry 对象都表示一个键值对，采用**开放地址法 + 线性探测（Linear Probing）策略**来处理哈希冲突，即从冲突位置向后遍历找到可插入位置
+
+- **键（key）是一个 ThreadLocal 对象**（通过**弱引用WeakReference**保存）
+- 值（value）则是对应线程的局部变量数据。
+
+```java
+static class Entry extends WeakReference<ThreadLocal<?>> {
+    /** The value associated with this ThreadLocal. */
+    Object value;
+
+    // key是ThreadLocal<?>，value是Object
+    Entry(ThreadLocal<?> k, Object v) {
+        super(k);
+        value = v;
+    }
+}
+
+// Entry数组
+private Entry[] table;
+```
+
+强引用弱引用的图示：
+
+```mermaid
+graph LR
+    Thread -->|"持有"| ThreadLocalMap
+    ThreadLocalMap -->|"包含元素（强引用）"| Entry
+    Entry -->|"强引用"| value
+    Entry -->|"弱引用"| ThreadLocal
+    方法/类/对象的变量 -->|"强引用"| ThreadLocal
+```
+
+**注意：**
+
+- ThreadLocalMap作为成员变量存放在**堆**中，而不是在[JMM](#JMM)的**“工作内存”**中。
+- 比较特别的是：`ThreadLocalMap` 的 `set()` 和 `createMap()` 方法中，**并没有直接存储 `ThreadLocal` 对象本身，而是使用 `ThreadLocal` 的哈希值计算数组索引**
+
+
+
+
 #### ThreadLocal内存泄漏问题
 
 一句话总结：**`ThreadLocal`对象失去引用，`entry`的`key`被回收，而`value`仍被`entry`引用，但是却无法再定位到`entry`；**
+
+> 可以看上面的mermaid图，一旦ThreadLocal失去了方法/类/对象中的强引用，就只剩一个弱引用了，这样很容易被GC，导致Enrty的value无法访问到，内存泄漏
 
 在上面的[底层原理](#ThreadLocal底层原理)中，提到Entry的key是一个 ThreadLocal 对象（通过**弱引用WeakReference**保存）
 
@@ -5184,6 +5328,49 @@ private Entry[] table;
 
 2. 线程持续存活，导致 `ThreadLocalMap` 长期存在。
    - 对于大部分短生命周期的线程（比如请求处理线程），当线程结束时，其 ThreadLocalMap 自然就会被回收，内存得以释放。问题更多出现在长生命周期线程中，例如线程池。
+
+
+
+```java
+// 内存泄漏实例
+public class MemoryLeakGuaranteed {
+    // 固定线程数的线程池
+    private static final ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    public static void main(String[] args) throws InterruptedException {
+        // 循环提交大量任务，每个任务都会在一个新局部 ThreadLocal 中存储一个 1MB 的 byte 数组
+        // 由于 ThreadLocal 是局部变量，任务结束后外部不再持有该 ThreadLocal 的引用，
+        // 但是线程池中的线程的 ThreadLocalMap 中依然会残留一个条目（key 被回收但 value 却无法回收）
+        for (int i = 0; i < 100_000; i++) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    // 局部 ThreadLocal 对象，只在当前任务中使用
+                    ThreadLocal<byte[]> threadLocal = new ThreadLocal<>();
+                    // 向当前线程的 ThreadLocalMap 中插入条目
+                    threadLocal.set(new byte[1024 * 1024]); // 分配1MB的内存
+
+                    // 模拟任务处理: 只是让线程等待一段时间，确保任务存在一段时间
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    // 任务结束后，局部 threadLocal 变量超出其作用域，
+                    // key 将变成弱引用，当 GC 时被回收，但对应的 1MB value 却不会被清除
+                    // 这就造成了内存泄漏
+                }
+            });
+
+            if (i % 100 == 0) {
+                System.out.println("已提交任务数: " + i);
+            }
+        }
+    }
+}
+```
+
+
 
 
 **如何避免内存泄漏的发生？**
@@ -5218,7 +5405,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
    - 适合实现**内存敏感的缓存**（如图片缓存）。
 - **底层原理**
    - 在JVM抛出OOM前，会清理所有仅被软引用指向的对象。回收策略取决于垃圾回收器和JVM参数。
-- ![](jvm-软引用.png)
+- ![](image/jvm-软引用.png)
 
 **三、弱引用（Weak Reference）**
 
@@ -5245,7 +5432,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
    - **应用场景**：在对象被回收后执行额外操作（如释放外部资源）。
 
-- ![](jvm-虚引用.png)
+- ![](image/jvm-虚引用.png)
 
 对比：
 
@@ -5274,9 +5461,9 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 - 执行引擎：执行字节码文件或本地方法
 - 垃圾回收器：用于对JVM中的垃圾内容进行回收
 
-![](JVM组成.png)
+![](image/JVM组成.png)
 
-![](jvm-运行时内存区域.png)
+![](image/jvm-运行时内存区域.png)
 
 
 
@@ -5291,7 +5478,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 使用`javap -v xxx.class`可以打印堆栈大小、局部变量、方法参数、类信息、常量池...等字节码相关信息：这里的箭头示意PC指向的位置；
 
-![](jvm-字节码信息.png)
+![](image/jvm-字节码信息.png)
 
 
 
@@ -5304,7 +5491,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 堆中包含**Eden,S0,S1,老年代**，java8之前还有**永久代**，java8后被本地内存中的**元空间**替代
 
-![](jvm-jdk7和8的结构区别.png)
+![](image/jvm-jdk7和8的结构区别.png)
 
 
 
@@ -5316,7 +5503,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 - 每个栈由多个**栈帧(frame)**组成，对应着每次方法调用时所占用的内存
 - 每个线程只能有一个**活动栈帧**，对应着当前正在执行的那个方法
 
-![](jvm-虚拟机栈.png)
+![](image/jvm-虚拟机栈.png)
 
 常见内容：
 
@@ -5329,7 +5516,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
   - 栈帧过大：比较不常见
 - 方法内的**局部变量的线程安全问题**
   - 如果是在方法内new，在方法内使用，不是引用的，也没有返回出去，没离开方法的作用范围，则线程安全，反之则线程不安全
-  - ![](jvm-虚拟机栈-局部变量线程安全.png)
+  - ![](image/jvm-虚拟机栈-局部变量线程安全.png)
 
 
 
@@ -5349,14 +5536,14 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 **元空间**和**永久代**都是方法区的一种实现，**元空间解决了永久代容易出现的内存溢出问题**；
 
-![](jvm-方法区-实现.png)
+![](image/jvm-方法区-实现.png)
 
 - 方法区(Method Area)是**各个线程共享**的内存区域
 - 主要存储：**类结构**、**字节码**、**方法信息**、[运行时常量池](#常量池与运行时常量池)
 - 虚拟机启动的时候创建，关闭虚拟机时释放
 - 如果方法区域中的内存无法满足分配请求，则会抛出`OutOfMemoryError: Metaspace`
 
-![](jvm-方法区.png)
+![](image/jvm-方法区.png)
 
 
 
@@ -5366,9 +5553,9 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 **常量池**
 
-使用`javap -v xxx.class`命令可以查看相关信息，在[PC](#PC程序计数器)那一节也有；这里的`#2`这样的就是常量池中的序号，下图中，`#3`找到后，还要继续区找`#26`，可能会有很多类似的套娃过程；
+使用`javap -v xxx.class`命令可以查看相关信息，在[PC](#PC程序计数器)那一节也有；这里的`#2`这样的就是常量池中的序号，下图中，`#3`找到后，还要继续去找`#26`，可能会有很多类似的套娃过程；
 
-![](jvm-方法区-常量池.png)
+![](image/jvm-方法区-常量池.png)
 
 **运行时常量池**
 
@@ -5392,10 +5579,10 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 - 常规IO
   - 先把文件放到系统缓存，再从系统缓存读到java堆内存中的java缓冲区
-  - ![](jvm-常规IO.png)
+  - ![](image/jvm-常规IO.png)
 - NIO
   - 画出了一块直接内存，系统和java都可以操作这块内存，无需做系统缓冲区到java缓冲区的复制操作
-  - ![](jvm-NIO.png)
+  - ![](image/jvm-NIO.png)
 
 
 
@@ -5465,7 +5652,7 @@ public class B {
 
 自定义类加载器：继承`java.lang.ClassLoader`类
 
-![](jvm-类加载器.png)
+![](image/jvm-类加载器.png)
 
 
 
@@ -5504,7 +5691,7 @@ public abstract class ClassLoader {
 
 类生命周期：
 
-![](jvm-类生命周期.png)
+![](image/jvm-类生命周期.png)
 
 **加载**：
 
@@ -5560,7 +5747,7 @@ public abstract class ClassLoader {
     - 例如A和B循环引用，在主类new了一个A和一个B后，它们的引用数都是2，当将主类里的A和B引用变量置为null后，A和B的引用次数都变成1
   
 - **可达性分析法**（采用）
-- ![](jvm-垃圾回收-可达性分析.png)
+- ![](image/jvm-垃圾回收-可达性分析.png)
   
 - 可以作为**GC Root**：
   
@@ -5577,11 +5764,11 @@ public abstract class ClassLoader {
 #### 垃圾回收算法
 
 - 标记清除算法
-  - ![](jvm-垃圾回收-标记清除算法.png)
+  - ![](image/jvm-垃圾回收-标记清除算法.png)
 - 标记整理算法
-  - ![](jvm-垃圾回收-标记整理算法.png)
+  - ![](image/jvm-垃圾回收-标记整理算法.png)
 - 复制算法
-  - ![](jvm-垃圾回收-复制算法.png)
+  - ![](image/jvm-垃圾回收-复制算法.png)
 
 
 
@@ -5589,7 +5776,7 @@ public abstract class ClassLoader {
 
 堆内存划分：
 
-![](jvm-垃圾回收-堆划分.png)
+![](image/jvm-垃圾回收-堆划分.png)
 
 工作机制：**新对象在Eden，经过GC时采用复制算法在from和to里反复移动，直到经过15次GC后移动到老年代**
 
@@ -5647,7 +5834,7 @@ public abstract class ClassLoader {
       - **标记整理算法**
   - 垃圾回收时，**单线程**工作，并且java应用中的所有线程都要暂停(STW)，等待垃圾回收的完成；
   - 只适合个人电脑，不适合企业开发；
-  - ![](jvm-垃圾回收-串行垃圾回收器.png)
+  - ![](image/jvm-垃圾回收-串行垃圾回收器.png)
 - **并行垃圾收集器**（JDK8默认）
   - 分类
     - **Parallel New** 
@@ -5657,7 +5844,7 @@ public abstract class ClassLoader {
       - 用于老年代
       - **标记整理算法**
   - 垃圾回收时，多线程工作，并且java应用中的所有线程都要暂停(STW)，等待垃圾回收的完成;
-  - ![](jvm-垃圾回收-并行垃圾回收器.png)
+  - ![](image/jvm-垃圾回收-并行垃圾回收器.png)
 - **CMS 垃圾收集器（并发标记清除）**
   - Concurrent Mark Sweep 是一款以获取最短回收停顿时间为目标的收集器，停顿时间短，用户体验就好。其最大特点是**在进行垃圾回收时，应用仍然能正常运行**。
   - 用于**老年代**
@@ -5666,7 +5853,7 @@ public abstract class ClassLoader {
     - 并发标记： 用一个闭包结构去记录可达对象;
     - 重新标记**：** 重新标记阶段就是为了修正并发标记期间因为用户程序继续运行而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段的时间稍长，远远比并发标记阶段时间短
     - 并发清除**：** 开启用户线程，同时 GC 线程开始对未标记的区域做清扫
-  - ![](jvm-垃圾回收-CMS回收器.png)
+  - ![](image/jvm-垃圾回收-CMS回收器.png)
   - **缺点**：
     - 对 CPU 资源敏感；
     - 无法处理浮动垃圾；
@@ -5688,14 +5875,14 @@ public abstract class ClassLoader {
     1. **Young Collection 年轻代垃圾回收**
        - 大体思路和之前差不多，但是区域不固定很灵活，大小也都可变
        - 图中示意GC过程中，把Eden区的用复制算法复制到survivor区，不需要S0，S1（from,to），而是直接以一个区域为新的survivor区即可，当经过多次GC后就会放入old区
-       - ![](jvm-垃圾回收-G1-年轻代垃圾回收.png)
+       - ![](image/jvm-垃圾回收-G1-年轻代垃圾回收.png)
     2. **Young Collection + Concurrent Mark 年轻代垃圾回收 + 并发标记**
        - 当老年代占用内存超过阈值(默认是**45%**)后，触发并发标记（标记**老年代中存活的对象**），这时无需暂停用户线程
        - 不过进入下一阶段前，有一个和CMS一样的**重新标记**阶段，**需要STW**
     3. **Mixed Collection 混合收集**
        - 不会对所有老年代区域进行回收，而是根据暂停时间目标（可配置），优先回收价值高（**即存活对象少，能清理出更多内存**）的区域,这也是 Gabage First 名称的由来
        - 会对Eden区、S区、选择出的Old区一起做垃圾回收
-       - ![](jvm-垃圾回收-G1-混合收集.png)
+       - ![](image/jvm-垃圾回收-G1-混合收集.png)
   - **并发失败**
   
     - 发生原因：
@@ -5828,7 +6015,7 @@ Coffee coffee = simpleCoffeeFactory.createCoffee("American")
 
 - 如果有新增的咖啡种类，也需要修改工厂里的代码，去判断字符串，new一个新的类，繁琐；
 
-![](设计模式-简单工厂模式.png)
+![](image/设计模式-简单工厂模式.png)
 
 ### 工厂方法模式
 
@@ -5852,7 +6039,7 @@ Coffee coffee = coffeeStore.createCoffee();
 - 优点是**无需改动原来的代码**，做到解耦，遵循了[开闭原则](#开闭原则)；
 - 缺点是**每次都要增加新的产品类和工厂，繁琐**（但其实已经很不错了）；
 
-![](设计模式-工厂方法模式.png)
+![](image/设计模式-工厂方法模式.png)
 
 
 
@@ -5864,7 +6051,7 @@ Coffee coffee = coffeeStore.createCoffee();
 2. 实现接口定义具体的工厂，例如意大利风格工厂，里面去实现创建意大利咖啡和创建意大利甜品的方法；
 3. 接下来跟工厂方法一样，构造方法传入，然后用工厂创建甜品/咖啡之类即可；
 
-![](设计模式-抽象工厂模式.png)
+![](image/设计模式-抽象工厂模式.png)
 
 特点：
 
@@ -5903,7 +6090,7 @@ Coffee coffee = coffeeStore.createCoffee();
 
 登录案例：
 
-![](设计模式-策略模式.png)
+![](image/设计模式-策略模式.png)
 
 - yml配置里配置自定义参数如图：策略名 + 策略类（小写开头参数可以直接在Spring容器中获取实例）
 
@@ -5995,7 +6182,7 @@ public static void main(string[] args){
 }
 ```
 
-![](设计模式-责任链模式.png)
+![](image/设计模式-责任链模式.png)
 
 优点：
 
@@ -6011,7 +6198,7 @@ public static void main(string[] args){
 
 常见场景
 
-![](设计模式-责任链模式-常见场景.png)
+![](image/设计模式-责任链模式-常见场景.png)
 
 
 
@@ -6241,11 +6428,11 @@ User.simple().name("张三").email("a@b.com").build()
 
 ### Spring 中用到的设计模式
 
-![](设计模式-spring.png)
+![](image/设计模式-spring.png)
 
 ### SpringBoot 中用到的设计模式
 
-![](设计模式-springboot.png)
+![](image/设计模式-springboot.png)
 
 
 
@@ -6255,7 +6442,7 @@ User.simple().name("张三").email("a@b.com").build()
 
 SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就可以访问其他所有信任的应用系统；
 
-![](企业场景-单点登录时序图.png)
+![](image/企业场景-单点登录时序图.png)
 
 
 
@@ -6263,20 +6450,20 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 **R**ole-**B**ased **A**ccess **C**ontrol 基于角色的访问控制：建立5张表，用户表  + 角色表 + 权限表 + 2张中间表；
 
-![](企业场景-RBAC权限模型.png)
+![](image/企业场景-RBAC权限模型.png)
 
 
 
 ### 数据上传在网络中的安全性
 
-![](企业场景-数据上传安全.png)
+![](image/企业场景-数据上传安全.png)
 
 - 文件很大建议使用对称加密，不过不能保存敏感信息
 - 文件较小，要求安全性高，建议采用非对称加密
 
-![](企业场景-数据上传安全-对称加密.png)
+![](image/企业场景-数据上传安全-对称加密.png)
 
-![](企业场景-数据上传安全-非对称加密.png)
+![](image/企业场景-数据上传安全-非对称加密.png)
 
 
 
@@ -6290,7 +6477,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 - 可以说说MQ的操作：消息传递后一个一个订单处理 和 一整辆车的订单处理的优缺点，优化方向是一个锁住某个车厢，但是也有新的问题，比如选座；
 
-![](企业场景-项目中遇到的棘手问题.png)
+![](image/企业场景-项目中遇到的棘手问题.png)
 
 
 
@@ -6306,13 +6493,13 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
     - 一个数据收集引擎，可以动态收集数据，可以对数据进行过滤、分析，将数据存储到指定的位置
   - Kibana
     - 一个数据分析和可视化平台，配合Elasticsearch对数据进行搜索，分析，图表化展示
-  - ![](企业场景-日志收集.png)
+  - ![](image/企业场景-日志收集.png)
 
 
 
 ### 查看日志的命令
 
-![](企业场景-查看日志的命令.png)
+![](image/企业场景-查看日志的命令.png)
 
 
 
@@ -6326,7 +6513,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 ### 定位系统瓶颈
 
-![](企业场景-定位系统瓶颈.png)
+![](image/企业场景-定位系统瓶颈.png)
 
 
 
