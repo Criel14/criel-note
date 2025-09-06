@@ -1,37 +1,35 @@
-# Java八股
+**Java八股**
 
 笔记内容来自[黑马Java八股](https://www.bilibili.com/video/BV1yT411H7YK/?share_source=copy_web&vd_source=184246d521185707999f94e18a91519f)，[JavaGuide](https://javaguide.cn/)，[小林coding](https://xiaolincoding.com/)，GPT等；
 
-
-
 面试回答要结合项目场景；准备的时候可以不断深入发问：缓存穿透怎么解决？布隆过滤器 → 布隆过滤器底层是什么？位数组、哈希 → 哈希相关的问题.....
 
-一些中间件写在 [12306笔记](..\12306项目笔记\12306笔记-部分中间件.md) 里面，例如Seata, Sentinel, OpenFeign等；
+一些中间件写在 [12306笔记](..\12306项目笔记-微服务组件\12306笔记-微服务组件.md) 里面，例如Seata, Sentinel, OpenFeign等；
 
 
 
-## 杂项
+# 杂项
 
-### LRU和LFU
+## LRU和LFU
 
 - LRU - Least Recently Used - 最近最少使用
 - LFU - Least frequently used - 最少频率使用
 
 
 
-### 上下文切换
+## 上下文切换
 
 CPU从一个线程或进程切换到另一个线程或进程时，需要**保存当前任务的状态**，包括寄存器内容、程序计数器、堆栈指针、状态寄存器等。每次切换都会保存和恢复这些信息
 
 
 
-### 单线程事件循环
+## 单线程事件循环
 
 单线程事件循环是一种编程模型，主要特点是只有一个线程负责处理所有任务。任务通常以事件（例如网络请求、定时器事件、用户输入等）的形式存在，通过一个不断循环的事件队列来调度和处理。
 
 
 
-### 用户态和内核态
+## 用户态和内核态
 
 操作系统中，内核态和用户态描述的是 **CPU 的运行模式**
 
@@ -53,7 +51,7 @@ CPU从一个线程或进程切换到另一个线程或进程时，需要**保存
 
 
 
-### 用户空间和内核空间
+## 用户空间和内核空间
 
 在操作系统中，**内存**通常被分为**内核空间（Kernel Space）**和**用户空间（User Space）**两大部分：
 
@@ -62,13 +60,13 @@ CPU从一个线程或进程切换到另一个线程或进程时，需要**保存
 
 
 
-### IO多路复用
+## IO多路复用
 
 >  具体看小林https://xiaolincoding.com/backend_interview/internet_medium/xiaohongshu.html#%E8%AE%B2%E4%B8%80%E4%B8%8Bio%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8
 
 是指利用**单个线程**来同时**监听多个Socket**，并在某个Socket可读/可写时得到通知，从而避免无效的等待，**充分利用CPU资源**。
 
-#### select
+### select
 
 > 固定长度，需要2次遍历、2次拷贝
 
@@ -78,13 +76,13 @@ CPU从一个线程或进程切换到另一个线程或进程时，需要**保存
 2. **内核**需要去**遍历**文件描述符集合，当检查到有事件产生后，将此 Socket 标记为可读或可写， 接着再把整个文件描述符集合**拷贝**回用户空间里；
 3. 用户线程还需要再通过**遍历**的方法找到可读或可写的 Socket，然后再对其处理；
 
-#### poll
+### poll
 
 > 动态长度，需要2次遍历、2次拷贝
 
 不再用定长的数组、而是用**链表**来存储文件描述符，但是工作方式没有变化，仍然需要拷贝、遍历；
 
-#### epoll
+### epoll
 
 > 红黑树 + 就绪链表，无需遍历
 
@@ -187,7 +185,7 @@ graph TD
     H --> D
 ```
 
-##### 水平触发与边缘触发
+### 水平触发与边缘触发
 
 epoll 支持两种事件触发模式，分别是边缘触发（edge-triggered，ET）和水平触发（level-triggered，LT）
 
@@ -201,14 +199,14 @@ epoll 支持两种事件触发模式，分别是边缘触发（edge-triggered，
 
 
 
-### 常见动态代理
+## 常见动态代理
 
 - **JDK 动态代理**：只对**实现了接口的类**有效，在运行时为目标对象生成代理对象，通过 `InvocationHandler` 拦截方法调用。
 - **CGLIB 代理**：基于**字节码技术**为目标类生成子类代理，即使目标类没有实现接口也能进行代理。
 
 
 
-### 代理对象
+## 代理对象
 
 在 Spring 框架中，**代理对象**通常指的是通过**动态代理**或基于字节码操作（如 **CGLIB**）生成的一个对象，该对象“**包装**”了目标对象，并在调用目标方法时，可以插入额外的逻辑处理（例如日志、事务、安全检查等）
 
@@ -225,7 +223,7 @@ epoll 支持两种事件触发模式，分别是边缘触发（edge-triggered，
 
 
 
-### 对象工厂
+## 对象工厂
 
 Spring中，对象工厂（ObjectFactory）是一个回调接口，其主要作用是延迟创建或获取 bean 的引用，通常用于**暴露一个“早期引用”**，也就是**提供对象的半成品**
 
@@ -235,7 +233,7 @@ Spring中，对象工厂（ObjectFactory）是一个回调接口，其主要作�
 
 
 
-### mybatis级联映射
+## mybatis级联映射
 
 **级联映射**或**关联映射**
 
@@ -243,7 +241,7 @@ Spring中，对象工厂（ObjectFactory）是一个回调接口，其主要作�
 
 `<result property="username" column="user_name" />`中的`property`对应的是Java的属性，`column`对应的是数据库里的属性
 
-#### 一对一关联映射（association）
+### 一对一关联映射（association）
 
 当一个对象中包含另一个对象（例如 User 包含 Address 对象）时，可以使用 `<association>` 标签。例如：
 
@@ -262,7 +260,7 @@ Spring中，对象工厂（ObjectFactory）是一个回调接口，其主要作�
 
 这里，`association` 的 **property** 表示 User 对象中 address 属性，**javaType** 指定关联对象的类型。
 
-#### 一对多关联映射（collection）
+### 一对多关联映射（collection）
 
 当一个对象包含一个集合（例如 Department 包含多个 Employee）时，可以使用 `<collection>` 标签。例如：
 
@@ -284,7 +282,7 @@ Spring中，对象工厂（ObjectFactory）是一个回调接口，其主要作�
 
 
 
-### lambda表达式的闭包特性
+## lambda表达式的闭包特性
 
 **Lambda 表达式**提供了一种简洁的写法，可以直接捕获外围作用域中的变量（前提是它们是 final 或 effectively final），减少了样板代码的数量。也就是可以直接把**主方法中的不可变变量**传递给lambda表达式使用：
 
@@ -305,7 +303,7 @@ public class CountDownLatchExample {
 
 
 
-### Java对象的内存结构
+## Java对象的内存结构
 
 对象存储在**堆**中，在**HotSpot虚拟机**中，其由三部分组成：
 
@@ -320,7 +318,7 @@ public class CountDownLatchExample {
 
 
 
-### Java对象头中的MarkWord
+## Java对象头中的MarkWord
 
 ![](image/jvm-对象头.png)
 
@@ -343,17 +341,17 @@ public class CountDownLatchExample {
 
 - **轻量级锁状态（轻量锁）**
 
-  - 当多个线程竞争同一把锁时，JVM会先尝试通过CAS操作将MarkWord更新为指向一个锁记录（Lock Record）的指针。这个锁记录通常在当前线程的栈帧中分配，用来保存原始的MarkWord值。若CAS操作成功，表示线程获取了轻量级锁，此时MarkWord中存储的信息就变成了指向该锁记录的指针。
+  - MarkWord中存储的内容指向一个锁记录（Lock Record）的指针。这个**锁记录**通常在当前线程的栈帧中分配，用来保存原始的MarkWord值。若CAS操作成功，表示线程获取了轻量级锁，此时MarkWord中存储的信息就变成了指向该锁记录的指针。
 
 - **重量级锁状态（重量锁/膨胀锁）**
 
-  - 如果锁竞争激烈或者发生线程阻塞，轻量级锁就会膨胀为重量级锁。在这种状态下，MarkWord中存储的内容变为**指向一个对象监视器（Monitor）的指针**。Monitor是一个更复杂的数据结构，用于管理等待队列、唤醒通知等同步机制。
+  - MarkWord中存储的内容变为**指向一个对象监视器（Monitor）的指针**。
 
 ![](image/java-markword.png)
 
 
 
-### 乐观锁
+## 乐观锁
 
 **乐观锁（Optimistic Locking）** 是一种假设并发冲突较少的锁策略，是**无锁（lock-free）编程**，它不会在数据操作前加锁，而是在**提交更新时检查**数据是否被其他线程修改。如果数据没有被更改，则更新成功；否则，执行重试机制（可能回滚或重新获取数据）。
 
@@ -380,106 +378,15 @@ public class CASExample {
 
 
 
-### 公平锁与非公平锁
+## 公平锁与非公平锁
 
 - 非公平锁：新的线程与等待队列中的线程共同来抢资源
 - 公平锁：新的线程到等待队列中等待，只让等待队列中的head线程获取锁
 
 
 
-### mysql的3种JOIN
 
-假设数据
-
-**students 表：**
-
-| student_id | name    |
-| ---------- | ------- |
-| 1          | Alice   |
-| 2          | Bob     |
-| 3          | Charlie |
-
-**scores 表：**
-
-| score_id | student_id | score |
-| -------- | ---------- | ----- |
-| 101      | 1          | 85    |
-| 102      | 2          | 90    |
-| 103      | 4          | 75    |
-
-注意：在 scores 表中，`student_id=4` 没有在 students 表中出现。
-
-
-
-#### INNER JOIN
-
-**SQL 语句：**
-
-```mysql
-SELECT s.student_id, s.name, sc.score
-FROM students s
-INNER JOIN scores sc ON s.student_id = sc.student_id;
-```
-
-**返回结果：**
-
-| student_id | name  | score |
-| ---------- | ----- | ----- |
-| 1          | Alice | 85    |
-| 2          | Bob   | 90    |
-
-**说明：**
- 仅返回满足 `students.student_id = scores.student_id` 的记录，因此只包含 student_id 为 1 和 2 的数据。
-
-
-
-#### LEFT JOIN 查询返回结果
-
-**SQL 语句：**
-
-```mysql
-SELECT s.student_id, s.name, sc.score
-FROM students s
-LEFT JOIN scores sc ON s.student_id = sc.student_id;
-```
-
-**返回结果：**
-
-| student_id | name    | score |
-| ---------- | ------- | ----- |
-| 1          | Alice   | 85    |
-| 2          | Bob     | 90    |
-| 3          | Charlie | NULL  |
-
-**说明：**
- 以 students 表为基准，返回所有学生记录。当某个学生在 scores 表中无匹配（例如 student_id=3），对应的 score 显示为 NULL。
-
-
-
-#### RIGHT JOIN 查询返回结果
-
-**SQL 语句：**
-
-```mysql
-SELECT s.student_id, s.name, sc.score
-FROM students s
-RIGHT JOIN scores sc ON s.student_id = sc.student_id;
-```
-
-**返回结果：**
-
-| student_id | name  | score |
-| ---------- | ----- | ----- |
-| 1          | Alice | 85    |
-| 2          | Bob   | 90    |
-| NULL       | NULL  | 75    |
-
-**说明：**
- 以 scores 表为基准，返回所有分数记录。当 scores 表中存在的 student_id（例如 4）在 students 表中无对应记录，则 students 表的字段显示为 NULL。
-
-
-
-### 连接池
+## 连接池
 
 连接池是一种用于管理和复用已建立连接（如TCP或数据库连接）的机制，它在系统启动时或首次请求时预先创建一定数量的连接，供后续请求重复使用，避免了每次请求时重复建立和断开连接的开销。
 
@@ -496,44 +403,133 @@ RIGHT JOIN scores sc ON s.student_id = sc.student_id;
 
 
 
-## 少见面试题
+# Redis
 
-磁盘中有21亿个整型数据，如何排序？
+## 常见数据结构
 
-归并排序；
-
-如果这些数据没有重复，这么在O(n)复杂度下排序？
-
-桶排序，bitmap；
-
-
-
-## Redis
-
-### 常见数据结构
+> 底层数据结构具体看小林：[redis数据结构](https://xiaolincoding.com/redis/data_struct/command.html)
 
 数据结构及其应用场景：
 
-- **String** 类型的应用场景：缓存对象、常规计数、分布式锁、共享 session 信息等。
-- **List** 类型的应用场景：消息队列（但是有两个问题：1. 生产者需要自行实现全局唯一 ID；2. 不能以消费组形式消费数据）等。
-- **Hash** 类型：缓存对象、购物车等。
-- **Set** 类型：聚合计算（并集、交集、差集）场景，比如点赞、共同关注、抽奖活动等。
-- **Zset** 类型：排序场景，比如排行榜、电话和姓名排序等。
+- **String**
+
+  - 数据结构：**SDS** 简单动态字符串 
+  - 应用场景：缓存对象、常规计数、分布式锁、共享 session 信息等；
+  - ```shell
+    > set key1 val1
+    > get key1
+    > del key1
+    > expire key1 60 # 60s后过期
+    ```
+
+- **List**
+
+  - 数据结构
+
+    - 3.2 版本前：
+      - 长度 < 512 且 每个元素大小 < 64B：**压缩列表ziplist**
+      - 否则：**双向链表**
+
+    - 3.2 版本后：
+      - 统一用：**quicklist**
+
+  - 应用场景：消息队列（但是有两个问题：1. 生产者需要自行实现全局唯一 ID；2. 不能以消费组形式消费数据）等；
+  - ```shell
+    > lpush key1 value1 value2 ...
+    > rpush key1 value1 value2 ...
+    > lpop key1
+    > rpop key1
+    > lrange key1 start end # 返回列表key中指定区间内的元素
+    > blpop key1 60 # 从key列表表头弹出一个元素，没有就阻塞60秒（为0则一直阻塞，可以用作消息队列）
+    > brpop key1 60 # 从key列表表尾弹出一个元素，没有就阻塞60秒
+    ```
+
+- **Hash** 
+
+  - 数据结构
+
+    - 7.0 版本前：
+      - 长度 < 512 且 每个元素大小 < 64B：**压缩列表ziplist**
+      - 否则：**哈希表**
+
+    - 7.0 版本后：
+      - 统一用：**listpack** 
+
+  - 应用场景：缓存对象、购物车（用户 id 为 key，商品 id 为 field，商品数量为 value）等。
+  - ```shell
+    > hest key1 field1 value1 field2 value2 ..
+    > hget key1 field1 field2 ...
+    > hdel key1 field1 field2 ..
+    ```
+
+- **Set** 
+
+  - 数据结构
+
+    - 长度 < 512：**整数集合**
+    - 否则：**哈希表**
+
+  - 应用场景：聚合计算（并集、交集、差集）场景，比如点赞、共同关注、抽奖活动等。
+  - ```shell
+    > sadd key1 member1 member2 ...
+    > srem key1 member1 member2 .. # 删除元素
+    > sismember key1 member1 # 判断元素是否存在
+    > sinter key1 key2 .. # 交集
+    > sunion key1 key2 .. # 并集
+    > sdiff key1 key2 .. # 差集
+    ```
+
+- **Zset** 
+
+  - 数据结构
+
+    - 7.0 版本前：
+      - 长度 < 128且 每个元素大小 < 64B：**压缩列表**
+      - 否则：**跳表**
+
+    - 7.0 版本后：
+      - 统一用：**listpack**
+
+  - 应用场景：排序场景，比如排行榜、电话和姓名排序等。
+
+  - ```shell
+    > zadd key1 score1 member1 score2 member2 ...
+    > zrem key1 member1 member2 ...
+    > zrange key start end [WITHSCORES] # 排序输出（正序）
+    > zrevrange key start end [WITHSCORES] # 排序输出（倒序）
+    ```
+
 
 Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
-- **BitMap**（2.2 版新增）：二值状态统计的场景，比如签到、判断用户登陆状态、连续签到用户总数等；
+- **BitMap**（2.2 版新增）
+
+  - 数据结构
+
+    - 是一个String类型，保存为二进制的字节数组
+
+  - 应用场景：二值状态统计的场景，比如签到、判断用户登陆状态、连续签到用户总数等；
+  - ```shell
+    > setbit key1 <offset 偏移量/下标> <value 0或1>
+    > getbit key1 <offset>
+    > bitcount key1 start end # 统计范围内的1的个数
+    ```
+
 - **HyperLogLog**（2.8 版新增）：海量数据基数统计的场景，比如百万级网页 UV 计数等；
-- **GEO**（3.2 版新增）：存储地理位置信息的场景，比如滴滴叫车；
-- **Stream**（5.0 版新增）：消息队列，相比于基于 List 类型实现的消息队列，有这两个特有的特性：自动生成全局唯一消息ID，支持以消费组形式消费数据。
+- **GEO**（3.2 版新增）
 
-具体看小林：[redis数据结构](https://xiaolincoding.com/interview/redis.html#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
+  - 数据结构：
+    - 是一个zset，将地理位置的经纬度编码为52位整数作为zset的score值
+
+  - 应用场景：存储地理位置信息的场景，比如滴滴叫车；
+
+- **Stream**（5.0 版新增）：专门为消息队列设计的，相比于基于 List 类型实现的消息队列，有这两个特有的特性：自动生成全局唯一消息ID，支持以消费组形式消费数据。
 
 
 
-### 缓存三大问题
+## 缓存三大问题
 
-#### 缓存穿透
+### 缓存穿透
 
 **定义：**
 
@@ -556,7 +552,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-#### 缓存击穿
+### 缓存击穿
 
 **定义：**
 
@@ -578,7 +574,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-#### 缓存雪崩
+### 缓存雪崩
 
 **定义：**
 
@@ -594,7 +590,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-### 双写一致性
+## 双写一致性
 
 **定义：**
 
@@ -632,11 +628,12 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-### redis持久化
+## redis持久化
 
 实现方法：
 
 - **RDB**
+  
   - 概念：
     - RDB全称Redis Database Backup file(Redis数据备份文件)，也被叫做Redis数据快照。
     - 简单来说就是把内存中的所有数据都记录到磁盘中。当Redis实例故障重启后，从磁盘读取快照文件，恢复数据
@@ -658,7 +655,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
     - ![](image/redis-持久化-AOF配置.png)
   - 特点：
     - 会有**重写命令**的机制来缩短log，例如`set num 123; set name jack; set num 66`优化成一行`mset name jack num 666`
-    - 可以配置文件大小比上次增长超过一定百分比/体积达到一定值，才触发重写
+    - 可以配置：文件大小比上次增长超过一定百分比/体积达到一定值，才触发重写
     - 不会很大的CPU压力，主要是磁盘IO（日志文件在磁盘中）
 
 - Redis 4.0 对于持久化机制做了什么优化？（**混合**）
@@ -674,7 +671,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-### 数据过期策略
+## 数据过期策略
 
 下面2种配合使用：
 
@@ -689,7 +686,7 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-### 数据淘汰策略
+## 数据淘汰策略
 
 - Redis提供了8种不同的数据淘汰策略，默认是noeviction不删除任何数据，内存不足直接报错
 - 配置在配置的文件的`maxmemory-policy `选项下
@@ -708,9 +705,9 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-### Redis分布式锁
+## Redis分布式锁
 
-#### 基本实现
+### 基本实现
 
 **基本：**
 
@@ -739,16 +736,16 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
   - 或者使用**lua脚本**做到原子性
 
-##### 缺陷
+### 缺陷
 
 - 主从一致性
-  - 由于**锁只存在于一个节点**，如果锁在的那个redis节点崩了，启用哨兵模式，让1个从节点变为主节点，这样就是去读新的主节点就存在读脏数据的情况
+  - 由于**锁只存在于一个节点**，如果锁在的那个redis节点，在同步之前崩了，启用哨兵模式，让1个从节点变为主节点，这样就是去读新的主节点就存在读脏数据的情况
   - 可以使用**RedLock红锁**解决，其每次创建**(n / 2 + 1)**个锁，例如有5个主节点，则去3个节点获取锁，若有另外的线程来了，只能最多获取2个节点的锁；但是红锁实现复杂、性能差、运维繁琐，很少使用；
   - 一定要保证主从一致性，那么推荐使用**zookeeper**而不是redis
 
 
 
-#### ZooKeeper分布式锁
+### ZooKeeper分布式锁
 
 ZooKeeper分布式锁的性能比RedLock还差些，但是可以保证**强一致**
 
@@ -758,14 +755,14 @@ ZooKeeper分布式锁的性能比RedLock还差些，但是可以保证**强一�
 2. **客户端想获取锁时**，在 `/locks` 下创建一个 **临时顺序节点**，如 `/locks/lock-000000001`、`/locks/lock-000000002`。ZooKeeper 根据创建顺序自动编号。
 3. **客户端获取当前目录下所有子节点**，并排序：
    - 如果自己创建的节点是序号最小的——成功获取锁；
-   - 如果不是，监听序号比自己小的前一个节点的删除事件（注册 watcher），等它消失后再检测是否轮到自己。
-4. **释放锁**：完成业务后，客户端手动删除自己对应的临时节点。此时下一个等待的客户端（监听者）会收到通知，尝试获取锁。
-5. **容错机制**：如果客户端意外挂掉或网络断开，会话过期后 ZooKeeper **自动删除**对应的临时节点，锁也随之释放，不会造成死锁。
+   - 如果不是，监听序号比自己小的前一个节点的删除事件（注册 watcher），等它消失后再检测是否轮到自己；
+4. **释放锁**：完成业务后，客户端手动删除自己对应的临时节点。此时下一个等待的客户端（监听者）会收到通知，尝试获取锁；
+5. **容错机制**：如果客户端意外挂掉或网络断开，会话过期后 ZooKeeper **自动删除**对应的临时节点，锁也随之释放，不会造成死锁；
 
 
 
 
-#### Redisson实现分布式锁
+### Redisson实现分布式锁
 
 redisson实现的分布式锁是**可重入锁**，利用hash结构存储：
 
@@ -773,9 +770,10 @@ redisson实现的分布式锁是**可重入锁**，利用hash结构存储：
 - hash 结构` (value, field) `是：` (线程唯一标识, 重入次数)`
 
 - **加锁过程：**
-  - 当一个线程尝试获取锁时，Redisson 会向 Redis 发送一个 `SET key value NX PX expireTime` 命令，其中：
-  - **NX** 保证仅在 key 不存在时才能设置成功，确保互斥性。
-  - **PX expireTime** 设置一个超时时间，用来防止由于异常情况导致锁永远占用的死锁问题。
+  - 当一个线程尝试获取锁时，Redisson 会向 Redis 发送功能同 `SET key value NX PX expireTime` 的命令；
+    - 其中：
+      - **NX** 保证仅在 key 不存在时才能设置成功，确保互斥性。
+      - **PX expireTime** 设置一个超时时间，用来防止由于异常情况导致锁永远占用的死锁问题。
 - **存储线程唯一标识：**
   - 锁对应的 Redis 键的值不只是简单的线程 ID，而是一个全局唯一的标识符（Redisson中是**客户端UUID + 线程ID**）：
   - **Redisson 客户端标识或 JVM 实例标识：** 这部分保证了每个 Redisson 客户端（甚至是不同的 JVM 实例）都有不同的前缀。
@@ -815,7 +813,7 @@ try {
 
 
 
-#### 看门狗机制
+### 看门狗机制
 
 - 问题：
   - 如果业务时间超过锁的过期时间，就会出问题；如果锁设置无限期，那如果释放锁前redis崩溃了，会造成死锁；
@@ -840,7 +838,7 @@ try {
 
 
 
-### redis集群
+## redis集群
 
 主从：解决高并发**读**问题
 
@@ -848,7 +846,7 @@ try {
 
 分片：解决海量数据存储问题 & 高并发**写**问题
 
-#### **主从同步**
+### **主从同步**
 
 - 读写分离，主节点负责写操作，从节点负责读操作（因为一般读多写少）
 - 主要发送的参数的`replid`和`offset`，slave请求同步时，master根据`offset`判断是否是第一次同步，是则采用全量同步，否则采用增量同步；
@@ -865,7 +863,7 @@ try {
   - ![](image/redis-集群-主从增量同步.png)
 
 
-#### **哨兵模式**
+### **哨兵模式**
 
 - 哨兵 (Sentinel)也是redis节点，通常也是一个集群 
   - 其保证redis集群的高可用性，实现**自动故障恢复**
@@ -896,7 +894,7 @@ try {
     - 配置`redis.conf`的节点超时时间，不会过早判定节点失效`cluster-node-timeout 15000`
     - **全覆盖检测**`cluster-require-full-coverage yes`，确保整个集群在所有哈希槽都分布到对应节点时才能正常提供写操作
 
-#### **分片集群**
+### **分片集群**
 
 - 利用**哈希槽**，集群有**16384**（$2^{14}$）个哈希槽，将不同的范围分配到不同的master结点中
   - hash值计算：`set name itheima` → **CRC16**校验得值`x` → `x % 16384`得到应该放在哪一个master中
@@ -909,7 +907,7 @@ try {
 
 
 
-### 热点key问题
+## 热点key问题
 
 检测热点key：抓包，或者用`redis-cli --hotkeys` 命令（Redis ≥4.0.3）
 
@@ -931,7 +929,7 @@ try {
 
 
 
-### 单线程但速度快的原因
+## 单线程但速度快的原因
 
 tip：真正影响性能的是IO，redis这里一般就是指**网络IO**；
 
@@ -964,11 +962,11 @@ io-threads-do-reads yes
 
 
 
-## MySQL
+# MySQL
 
-### 架构
+## 架构
 
-线程处理、语法解析器、执行计划（优化器）、执行器（操作引擎） + 存储引擎层
+连接/线程处理、语法解析器、执行计划（优化器）、执行器（操作引擎） + 存储引擎层
 
 ![mysql-架构](image/mysql-架构.png)
 
@@ -976,9 +974,37 @@ io-threads-do-reads yes
 
 
 
-### 三大范式
+### SQL执行流程
 
-#### 第一范式（1NF）：确保字段的原子性
+大致执行流程如下：
+
+```mermaid
+flowchart TD
+    A["客户端发送 SQL 请求"]
+    B["服务器接收命令与连接认证"]
+    C["解析 SQL → AST"]
+    D["预处理与语义检查"]
+    E["优化器生成执行计划"]
+    F["执行器调度存储引擎 (handler)"]
+    G>"存储引擎：Buffer Pool / MVCC / 索引访问 / undo"]
+    H{"是否需要中间处理？"}
+    I["排序 / 聚合 / 临时表 / filesort"]
+    J["事务提交：Redo Log / Binlog / Group-commit"]
+    K["封装结果集并通过协议返回客户端"]
+    L["清理临时对象 + 更新统计 / 后台 purge 等"]
+    
+    A --> B --> C --> D --> E --> F --> G --> H
+    H -- 是 --> I --> J
+    H -- 否 --> J
+    J --> K --> L
+
+```
+
+
+
+## 三大范式
+
+### 第一范式（1NF）：确保字段的原子性
 
 **定义**：每一列的数据都是不可再分的原子值。
 
@@ -997,7 +1023,7 @@ io-threads-do-reads yes
 
 
 
-#### 第二范式（2NF）：消除部分依赖
+### 第二范式（2NF）：消除部分依赖
 
 **定义**：在满足 1NF 的基础上，所有**非主属性必须完全依赖于主键**。
 
@@ -1026,7 +1052,7 @@ io-threads-do-reads yes
 
 
 
-####  第三范式（3NF）：消除传递依赖
+###  第三范式（3NF）：消除传递依赖
 
 **定义**：在满足 2NF 的基础上，**非主属性不依赖于其他非主属性**。
 
@@ -1055,9 +1081,9 @@ io-threads-do-reads yes
 
 
 
-### 慢查询
+## 慢查询
 
-#### 定位慢查询
+### 定位慢查询
 
 - 开源工具
 
@@ -1080,71 +1106,9 @@ io-threads-do-reads yes
   - 配置完毕之后，重新启动MVSQL服务器进行测试，查看慢日志文件中记录的信息`/var/lib/mysql/localhost-slow.log`，可以**知道具体的sql语句**，如图：
     - ![](image/mysql-慢查询-慢日志.png)
 
-#### 优化慢查询
-
-慢查询的原因和可能的解决方案：
-
-- **聚合查询**
-  
-  - 可以建立一个**临时表**；在数据量很大时，group by语句会很消耗性能，可以先查询出部分数据
-  
-  - ```mysql
-    # 假设你有一个订单数据量非常庞大的订单表 orders，其中包含成千上万的订单记录。如果你需要统计 2023 年每个月的订单数量和总销售额，直接在 orders 表上进行如下查询可能会很慢：
-    SELECT DATE_FORMAT(order_date, '%Y-%m') AS order_month, COUNT(*) AS order_count, SUM(amount) AS total_amount
-    FROM orders
-    WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31'
-    GROUP BY order_month;
-    
-    # 创建临时表（临时表只在当前会话中存在）—— 先查年份
-    CREATE TEMPORARY TABLE tmp_orders AS
-    SELECT order_date, amount
-    FROM orders
-    WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31';
-    
-    # 可以在临时表上建立索引
-    ALTER TABLE tmp_orders ADD INDEX idx_order_date (order_date);
-    
-    # 有了筛选后的数据后，我们可以在临时表上进行聚合操作 —— 再聚合月份
-    SELECT order_date, SUM(amount) AS total_amount
-    FROM tmp_orders
-    GROUP BY order_date;
-    ```
-- **多表查询**
-  
-  - 优化sql语句
-- **表数据量过大**
-  
-  - 添加索引
-- **查询深度分页查询**
-  
-  - [覆盖索引](#“覆盖索引”) + 子查询（即分页查询排序id，再用筛选出来的id去查数据）
-
-- 其他：
-
-  - 尽量不要用`select *`，只查询真正需要的列
-
-  - 联表查询最好要以小表驱动大表（小表在外层），字段要有索引
-
-    - **小表驱动大表**：先把小表整个加载到内存（或者加载必要的数据），然后每次查找大表（一般3-4次io）
-  
-    - **大表驱动小表**：难以将整个大表加载到内存，需要很多次，每次循环都需要重新读取一次，频繁IO，而查找小表的io次数和查找大表的io次数又相差不大
-  
-    - ```sql
-      # 假设有customer小表，orders大表
-      
-      SELECT c.customer_id,
-             c.customer_name,
-             o.order_id,
-             o.order_amount
-      FROM customers c
-      JOIN orders o ON c.customer_id = o.customer_id;
-      ```
-  
-  - 不过最好通过冗余字段的设计，避免联表查询
 
 
-
-#### explain执行计划
+### 执行计划
 
 分析语句信息：**explain**或**desc**加上正常的select语句，查看**执行计划**，如图：
 
@@ -1164,8 +1128,8 @@ io-threads-do-reads yes
 - Extra
 
   - 额外的优化建议
-  - **"Using Index；Using where; "：**查找使用了索引，需要的数据都在索引列中能找到，不需要回表查询数据
-  - **"Using index condition"：**查找使用了索引，但是需要回表查询数据
+  - **"Using Index；Using where; "：**查找使用了索引，需要的数据都在索引列中能找到，不需要回表查询数据**（使用索引，不回表）**
+  - **"Using index condition"：**查找使用了索引，但是需要回表查询数据**（使用索引，回表）**
   - **"Using filesort"**：当查询语句中包含 `group by` 操作，而且无法利用索引完成排序操作的时候， 这时不得不选择相应的排序算法进行，甚至可能会通过文件排序，效率是很低的，所以要避免这种问题的出现。
   - **"Using temporary"**：使了用临时表保存中间结果，MySQL 在对查询结果排序时使用临时表，常见于排序order by 和分组查询 group by。效率低，要避免这种问题的出现。
 - type
@@ -1191,7 +1155,63 @@ io-threads-do-reads yes
 
 
 
-#### mysql优化
+### 优化慢查询
+
+慢查询的原因和可能的解决方案：
+
+- **聚合查询**
+  
+  - 可以建立一个**临时表**；在数据量很大且不走索引时，group by语句会很消耗性能，可以先查询出部分数据
+  
+  - ```mysql
+    # 假设有一个订单数据量非常庞大的订单表 orders，其中包含成千上万的订单记录。如果需要统计 2023 年每个月的订单数量和总销售额，直接在 orders 表上进行如下查询可能会很慢：
+    # DATE_FORMAT做了函数操作，索引无法命中，在group by的时候，需要遍历where后的所有数据
+    SELECT 
+    	DATE_FORMAT(order_date, '%Y-%m') AS order_month,
+        COUNT(*) AS order_count,
+        SUM(amount) AS total_amount
+    FROM orders
+    WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31'
+    GROUP BY order_month;
+    
+    # 对于上面的sql，要不就添加一个新的字段：月份，并加上索引，要不就用一个汇总表，每个月都查一次，后续统计更快；
+    ```
+- **多表查询**
+  
+  - 优化sql语句
+- **表数据量过大**
+  
+  - 添加索引
+- **查询深度分页查询**
+  
+  - [覆盖索引](#“覆盖索引”) + 子查询（即分页查询排序id，再用筛选出来的id去查数据）
+
+- 其他：
+
+  - 尽量不要用`select *`，只查询真正需要的列
+
+  - 联表查询最好要以小表驱动大表（小表在外层，from小表join大表），字段要有索引
+
+    - **小表驱动大表**：先把小表整个加载到内存（或者加载必要的数据），然后每次查找大表（一般3-4次io）
+  
+    - **大表驱动小表**：难以将整个大表加载到内存，需要很多次，每次循环都需要重新读取一次，频繁IO，而查找小表的io次数和查找大表的io次数又相差不大
+  
+    - ```sql
+      # 假设有customer小表，orders大表
+      
+      SELECT c.customer_id,
+             c.customer_name,
+             o.order_id,
+             o.order_amount
+      FROM customers c
+      JOIN orders o ON c.customer_id = o.customer_id;
+      ```
+  
+  - 不过最好通过冗余字段的设计，避免联表查询
+
+
+
+## mysql优化
 
 - 表设计
 - 索引
@@ -1201,11 +1221,13 @@ io-threads-do-reads yes
 
 ![](image/mysql-优化-表和语句.png)
 
+> 关于join：left/right join会额外处理NULL，表更大；同时它们会限制重排序优化；
 
 
-### 索引
 
-#### 关于NULL
+## 索引
+
+### 关于NULL
 
 - **主键索引**不可以为`NULL`
 - **唯一索引**可以为`NULL`
@@ -1214,7 +1236,7 @@ io-threads-do-reads yes
 
 
 
-#### 使用
+### 基本使用
 
 ```mysql
 # 建表时创建
@@ -1236,12 +1258,12 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### 索引概念
+### 索引概念
 
 - MySQL索引是提高数据库**查询性能**的重要机制，通过建立数据的有序数据结构，使得数据检索速度大幅提升
 - mysql默认存储引擎是innoDB，其用**B+树**实现索引结构
   - 深度低，磁盘IO次数少
-    - > 红黑树或其他二叉平衡树</strong>是二叉结构，每个节点只有两个子节点，所以在数据量大时，树的深度会比较大。较深的树意味着在查找过程中需要访问更多的节点（磁盘 IO 次数增加），对数据库这种需要频繁磁盘访问的场景来说，会显得效率不如 B+树。
+    - > 红黑树或其他二叉平衡树是二叉结构，每个节点只有两个子节点，所以在数据量大时，树的深度会比较大。较深的树意味着在查找过程中需要访问更多的节点（磁盘 IO 次数增加），对数据库这种需要频繁磁盘访问的场景来说，会显得效率不如 B+树。
   - 非叶子节点只存储键和指针
     - > 相比<strong>B树</strong>，对于同样的空间，非叶子节点能存储更多指针，使得B+树更加矮胖，层数更少
   - 叶子节点双向链表
@@ -1254,7 +1276,7 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### 索引分类
+### 索引分类
 
 - ![](image/mysql-索引-索引分类2.png)
 - **聚集索引（聚簇索引）**
@@ -1275,7 +1297,7 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### “覆盖索引”
+### “覆盖索引”
 
 - 覆盖索引是指：查询使用了索引，并且需要返回的列在该索引中已经全部能够找到，**不用回表查询**
 
@@ -1315,7 +1337,7 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### 索引创建原则
+### 索引创建原则
 
 - 针对于**数据量较大**，且查询比较频繁的表建立索引。（例如单表超过10w）
 - 主键尽量自增，不然插入的时候效率低；
@@ -1335,7 +1357,7 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### 索引失效
+### 索引失效
 
 - 违反**最左前缀法则**（且无覆盖索引）
   - 若有联合索引`idx(name, age, address)`，查询的时候，**右边可以省，左边不能省，中间也不能省**
@@ -1370,7 +1392,7 @@ CREATE INDEX idx_name ON students (name);
 
 
 
-#### 索引下推
+### 索引下推
 
 （是MySQL5.6开始有的优化技术）
 
@@ -1393,17 +1415,20 @@ CREATE TABLE users (
 SELECT * FROM users WHERE age > 20 AND birthday = '2000-01-01';
 ```
 
-- 如果**没有索引下推**：**存储引擎**通过索引找到 `age > 20` 的记录主键，然后回表获取完整数据，再由**服务器层**过滤 `birthday = '2000-01-01'` 的条件（先根据索引定位记录，再根据where过滤）
+- 如果**没有索引下推**：**存储引擎**通过索引找到 `age > 20` 的记录主键，然后回表获取完整数据，再由**Server服务器层**过滤 `birthday = '2000-01-01'` 的条件（先根据索引定位记录，再根据where过滤）
+  - 没有下推时，存储引擎会**尽可能利用索引匹配最左前缀字段**，之后的所有剩余过滤条件都在Server层处理；
 
 - 如果**有索引下推**：**存储引擎**在扫描索引时同时应用 `age > 20` 和 `birthday = '2000-01-01'` 的条件，提前过滤不符合的记录，减少回表次数（只用于二级索引，不用于主键索引）
+  - 有下推时，那部分 **可以利用索引字段判断的 WHERE 条件**，才会下推到存储引擎层过滤；剩余条件仍由 Server 层过滤；
 
 
 
-#### 补充：哈希索引
+
+### 补充：哈希索引
 
 在使用**Memory引擎**时默认使用到哈希索引，也可以显式指定使用B+树索引；
 
-下面的表都是存储在内存中的，**数据**不会写入磁盘，一旦 MySQL 服务重启、崩溃或断电，这些数据就会全部清空，但表的结构依然存在，只是空的；
+下面的表都是存储在**内存中**的，**数据**不会写入磁盘，一旦 MySQL 服务重启、崩溃或断电，这些数据就会全部清空，但表的结构依然存在，只是空的；
 
 哈希索引也是存在内存中的；
 
@@ -1446,11 +1471,11 @@ CREATE TABLE session_cache (
 
 
 
-#### 补充：Memory引擎和TempTable引擎
+### 补充：Memory引擎和TempTable引擎
 
 创建**临时表**时，临时表存储在**内存**中，mysql使用Memory引擎（<=5.7）或TempTable引擎（>=8.0）；
 
-其中，TempTable默认使用B+树索引，而Memory引擎默认使用哈希索引
+其中，TempTable默认使用**B+树**索引，而Memory引擎默认使用哈希索引
 
 > tip：mysql5.7的下一个正式版就是mysql8.0
 
@@ -1465,9 +1490,9 @@ CREATE TEMPORARY TABLE temp_sales (
 
 
 
-### 事务
+## 事务
 
-#### 事务的特性
+### 事务的特性
 
 ACID：（结合具体使用过的业务去说明）
 
@@ -1486,9 +1511,9 @@ ACID：（结合具体使用过的业务去说明）
 
 
 
-#### 并发事务
+### 并发事务
 
-##### 并发事务问题
+#### 并发事务问题
 
 - **脏读**
   - 一个事务读取到了其他事务**修改了的但未提交**的数据
@@ -1510,13 +1535,13 @@ ACID：（结合具体使用过的业务去说明）
   - 两个事务同时读取同一数据，并基于读取结果做出修改，后提交的事务覆盖了先提交事务的更新，导致先前的修改丢失。
   - eg：事务 A 和事务 B 同时读取某账户余额为 100 元，两人都打算扣除 20 元。A 修改后提交余额为 80，B 随后修改也以 100 为基础，提交后余额为 80，而正确结果应为 60。
 
-##### 隔离级别
+#### 隔离级别
 
 - 解决方式是设置**隔离级别**（图中的`√`或`×`表示该级别下是否可能发生对应的情况）
 
 - ![](image/mysql-事务-隔离级别.png)
 
-- **注意：**在”**可重复读**“隔离级别下，如果是普通的`select`，每次都读同一个视图，是没有幻读问题的；但是如果加了锁，例如`for update`，就会变成当前读，读取最新的数据，这时就可能产生幻读，不过通过临键锁+间隙锁是可以解决部分幻读；
+- **注意：**在”**可重复读**“隔离级别下，如果是普通的`select`，每次都读同一个视图，是没有幻读问题的；但是如果加了锁，例如`for update`，或者有`update`语句，就会变成当前读，读取最新的数据，这时就可能产生幻读，不过通过临键锁+间隙锁是可以解决部分幻读；
 
   - 如果查询已有的数据，加锁可以解决幻读；
 
@@ -1532,7 +1557,7 @@ ACID：（结合具体使用过的业务去说明）
 
     
 
-#### redo log 和 undo log
+## redo log 和 undo log
 
 事务提交**之前**发生了崩溃，重启后会通过 **undo log** 回滚事务，事务提交**之后**发生了崩溃，重启后会通过**redo log** 恢复事务；
 
@@ -1564,7 +1589,7 @@ ACID：（结合具体使用过的业务去说明）
 
 
 
-#### MVCC
+## MVCC
 
 概念：全称Multi - Version Concurrency Control，**多版本并发控制**，用于维护一个数据的多个版本，保证读写没有冲突
 
@@ -1579,7 +1604,7 @@ ACID：（结合具体使用过的业务去说明）
   - （非阻塞读）
     - 由于读操作只依赖快照和undo log的版本信息，读操作**不需要加锁**，实现了**非阻塞读**，提高了系统的并发性能。
 
-##### 隐藏字段
+### 隐藏字段
 
 - InnoDB在**每一行数据**中都隐式地维护了三个隐藏列：
   - **DB_TRX_ID**：记录最后一次修改该行数据的事务ID。**（记录最后修改事务）**
@@ -1587,7 +1612,7 @@ ACID：（结合具体使用过的业务去说明）
   - **DB_ROW_ID**：内部自增的行ID，用于定位数据。
 - 这些隐藏列帮助InnoDB实现MVCC，通过undo log维护了数据的历史版本，形成所谓的**版本链**。
 
-##### 版本链
+### 版本链
 
 - **版本链**是指在对**一行数据**进行修改时，原来的数据版本不会立即丢弃，而是保留在undo log中，并通过**DB_ROLL_PTR**形成链表结构，指向前一次修改的版本。这样：
   - 当前数据行的最新版本存储在表中。
@@ -1596,7 +1621,7 @@ ACID：（结合具体使用过的业务去说明）
   - 当事务需要根据快照读取数据时，会沿着版本链查找出符合事务快照条件的版本。
   - ![](image/mysql-事务-undolog版本链.png)
 
-##### ReadView
+### ReadView
 
 每个事务在开始读取数据时会生成一个**读视图 ReadView**。读视图中记录了当前活跃的事务ID范围，根据这些信息，决定哪些版本是“可见”的：
 
@@ -1621,16 +1646,16 @@ ACID：（结合具体使用过的业务去说明）
 
 
 
-### 锁
+## 锁
 
 按照粒度从大到小：
 
-#### **全局锁**
+### **全局锁**
 
 - 锁定数据库中所有的表，可能在**数据备份**过程中使用
 - **由 MySQL 服务器提供**
 
-#### **表级锁**
+### **表级锁**
 
 - 在 MySQL 的 **MyISAM 存储引擎**中，锁粒度较粗，主要采用表级锁。当一个事务对表进行写操作时，整个表会被锁住，从而阻塞其他对该表的任何操作。这种方式开销小，但并发性较低。
 
@@ -1653,7 +1678,7 @@ ACID：（结合具体使用过的业务去说明）
   
     -  如果对表中某行做了`for update`锁，那会自动给表加上**意向锁**，其他事务想要添加表级锁的时候，就可以直接知道这个表或表中的行是否有加锁了，而不需要遍历表中的数据看每一行是否被加锁；
 
-#### **行级锁**
+### **行级锁**
 
 - 在 InnoDB 存储引擎中，**锁粒度较细**，采用**行级锁**。事务只会锁定涉及的行，从而提高并发性。不过行级锁的管理开销相对较大。
 
@@ -1783,7 +1808,7 @@ ACID：（结合具体使用过的业务去说明）
 
 
 
-#### 不同存储引擎中的锁对比
+### 不同存储引擎中的锁对比
 
 | 存储引擎        | 全局锁                                                | 表级锁                   | 行级锁                   | 锁细分说明                               | 备注                                     |
 | --------------- | ----------------------------------------------------- | ------------------------ | ------------------------ | ---------------------------------------- | ---------------------------------------- |
@@ -1796,7 +1821,7 @@ ACID：（结合具体使用过的业务去说明）
 
 
 
-#### 锁自动添加时机
+### 锁自动添加时机
 
 不确定，比较怪
 
@@ -1849,16 +1874,16 @@ COMMIT;
 
 
 
-### 主从同步
+## 主从同步
 
-#### binlog 和 relaylog
+### binlog 和 relaylog
 
 binlog：
 
 - 二进制日志 `BINLOG` 记录了所有的 **DDL** (数据定义语言) 语句 和 **DML** (数据操纵语言) 语句，但不包括数据**查询**(SELECT、SHOW)语句。
 - binlog是server层的，不依赖存储引擎
 
-#### 同步过程
+### 同步过程
 
 1. Master 主库在事务提交时，会把数据变更记录在**二进制日志文件 Binlog** 中
 2. 从库读取主库的二进制日志文件 Binlog ，写入到从库的**中继日志 Relay Log**
@@ -1868,7 +1893,7 @@ binlog：
 
 
 
-### 分库分表
+## 分库分表
 
 单表数据1000w或20G、或遇到IO瓶颈等，可能就需要考虑分库分表；
 
@@ -1879,24 +1904,128 @@ binlog：
   - **特点：按业务对数据分级管理、维护、扩展等；高并发情况下，提高磁盘IO**
   - eg：SpringCloud里，一个业务模块一个库
 - **垂直分表**
-  - 拆分表中的字段：，不同字段拆成多个表，一般拆出不常用的、大文本的
-    - （假设表头是最左边一列，往右存数据，那么横着砍一刀）
+  
+  - | 字段A    | ✂    | 字段B    |
+    | -------- | ---- | -------- |
+    | 字段值A1 | ⬇️    | 字段值B1 |
+  - 拆分表中的字段：，不同字段拆成多个表，一般拆出不常用的、大文本的（例如上面的A、B字段拆分成2个表）
   - **特点：冷热数据分离，减少IO争抢，2张表互不影响**
   - eg：将商品描述字段拆出来，做一个单独的表
+  
 - **水平分库**
+
   - 拆分库中的数据：库中的数据拆分到多个库中
   - 类似redis的[分片集群](#分片集群)，可以对id取模决定放在哪个库中
   - **特点：优化单库数据量过大时的性能问题**
+  
 - **水平分表**
-  - 拆分表中的数据，可以在一个库中，也可以在多个库中
-    - （假设表头是最左边一列，往右存数据，那么竖着砍一刀）
+  
+  - | 字段A    |
+    | -------- |
+    | 字段值A1 |
+    | ✂️➡️       |
+    | 字段值A2 |
+  - 拆分表中的数据，可以在一个库中，也可以在多个库中（例如上面的A1、A2字段值拆分成2个表）
   - **特点：优化单表数据量过大时的性能问题**
+  
 
 tip：利用**中间件**可以实现一些业务难题，例如：分布式事务一致性问题、跨节点关联查询跨节点分页、排序函数、主键避重等；中间件有**Mycat、Apache ShardingSphere**等
 
 
 
-### B+树计算题
+## mysql的3种JOIN
+
+假设数据
+
+**students 表：**
+
+| student_id | name    |
+| ---------- | ------- |
+| 1          | Alice   |
+| 2          | Bob     |
+| 3          | Charlie |
+
+**scores 表：**
+
+| score_id | student_id | score |
+| -------- | ---------- | ----- |
+| 101      | 1          | 85    |
+| 102      | 2          | 90    |
+| 103      | 4          | 75    |
+
+注意：在 scores 表中，`student_id=4` 没有在 students 表中出现。
+
+
+
+### INNER JOIN
+
+**SQL 语句：**
+
+```mysql
+SELECT s.student_id, s.name, sc.score
+FROM students s
+INNER JOIN scores sc ON s.student_id = sc.student_id;
+```
+
+**返回结果：**
+
+| student_id | name  | score |
+| ---------- | ----- | ----- |
+| 1          | Alice | 85    |
+| 2          | Bob   | 90    |
+
+**说明：**
+ 仅返回满足 `students.student_id = scores.student_id` 的记录，因此只包含 student_id 为 1 和 2 的数据。
+
+
+
+### LEFT JOIN 查询返回结果
+
+**SQL 语句：**
+
+```mysql
+SELECT s.student_id, s.name, sc.score
+FROM students s
+LEFT JOIN scores sc ON s.student_id = sc.student_id;
+```
+
+**返回结果：**
+
+| student_id | name    | score |
+| ---------- | ------- | ----- |
+| 1          | Alice   | 85    |
+| 2          | Bob     | 90    |
+| 3          | Charlie | NULL  |
+
+**说明：**
+ 以 students 表为基准，返回所有学生记录。当某个学生在 scores 表中无匹配（例如 student_id=3），对应的 score 显示为 NULL。
+
+
+
+### RIGHT JOIN 查询返回结果
+
+**SQL 语句：**
+
+```mysql
+SELECT s.student_id, s.name, sc.score
+FROM students s
+RIGHT JOIN scores sc ON s.student_id = sc.student_id;
+```
+
+**返回结果：**
+
+| student_id | name  | score |
+| ---------- | ----- | ----- |
+| 1          | Alice | 85    |
+| 2          | Bob   | 90    |
+| NULL       | NULL  | 75    |
+
+**说明：**
+ 以 scores 表为基准，返回所有分数记录。当 scores 表中存在的 student_id（例如 4）在 students 表中无对应记录，则 students 表的字段显示为 NULL。
+
+
+
+## B+树计算题
 
 做题前，记住2个数据：
 
@@ -1917,7 +2046,7 @@ tip：利用**中间件**可以实现一些业务难题，例如：分布式事�
 
 
 
-### MySQL与MariaDB
+## MySQL与MariaDB
 
 - mariadb是开源社区驱动的项目（完全开源），而mysql由Oracle公司控制（企业版需要商业许可）；
 
@@ -1928,9 +2057,9 @@ tip：利用**中间件**可以实现一些业务难题，例如：分布式事�
 
 
 
-## Netty
+# Netty
 
-### 基本概念
+## 基本概念
 
 Netty 是一个高性能、异步事件驱动的网络应用程序框架，基于 [Java NIO](#NIO零拷贝) 构建，和 [epoll](#epoll) 配合；
 
@@ -1944,13 +2073,13 @@ Netty 中由主线程调用  `epoll_wait`，方法返回后，遍历就绪的文
 
 
 
-## Spring
+# Spring
 
 Spring两大核心：**IOC（控制反转）和AOP（面向切面编程）**
 
 
 
-### Spring中的Bean线程安全问题
+## Spring中的Bean线程安全问题
 
 Spring框架中的`@Scope`注解，默认的值就是**singleton**，使得Bean默认是单例的。总结：**一个Bean只创建一个实例，并且这个实例会被多个线程共享**
 
@@ -1960,7 +2089,7 @@ Spring框架中的`@Scope`注解，默认的值就是**singleton**，使得Bean�
 
 
 
-### AOP
+## AOP
 
 AOP称为**面向切面编程**，用于将那些与业务无关，但却对**多个对象**产生影响的公共行为和逻辑，抽取并封装为一个可重用的模块，这个模块被命名为“切面”(Aspect)；
 
@@ -2037,9 +2166,9 @@ AOP称为**面向切面编程**，用于将那些与业务无关，但却对**�
 
 
 
-### Spring事务
+## Spring事务
 
-#### Spring事务传播
+### Spring事务传播
 
 **事务传播（Propagation）**：当一个被事务管理的方法调用另一个方法时，被调用的方法是否需要加入到当前事务中，或者开启一个新的事务，这就是事务传播行为所决定的。Spring 通过 `@Transactional` 注解的 `propagation` 属性来设置这些行为。
 
@@ -2097,7 +2226,7 @@ public void method() {
 
 
 
-#### Spring事务失效
+### Spring事务失效
 
 关于Spring事务：
 
@@ -2198,7 +2327,7 @@ public void method() {
 
 
 
-### Bean生命周期
+## Bean生命周期
 
 大致上是：**构造方法 → 初始化 → 使用 → 销毁**
 
@@ -2287,14 +2416,14 @@ public void method() {
 
 
 
-### 循环依赖
+## 循环依赖
 
-#### 循环依赖的产生
+### 循环依赖的产生
 
 - 例如`A`中用`@Autowired`注入`B`，同时`B`中也用`@Autowired`注入`A`
 - ![](image/Spring-循环依赖产生.png)
 
-#### Spring三级缓存
+### Spring三级缓存
 
 Spring Boot **2.6+** 默认**禁止循环依赖**，即 `spring.main.allow-circular-references=false`（默认值）
 
@@ -2318,7 +2447,7 @@ Spring Boot **2.6+** 默认**禁止循环依赖**，即 `spring.main.allow-circu
   - ![](image/Spring-使用三级缓存.png)
   - 也是先注入半成品，只不过是用对象工厂生成半成品
 
-#### 需要手动解决的循环依赖问题
+### 需要手动解决的循环依赖问题
 
 构造方法导致的循环依赖：Bean在实例化阶段就需要依赖对象，此时依赖的**Bean可能未被创建**，三级缓存失效。
 
@@ -2352,7 +2481,7 @@ public class ServiceB {
 
 
 
-### SpringMVC 执行流程
+## SpringMVC 执行流程
 
 - **视图阶段**
   - **前端控制器：**接收请求 
@@ -2379,7 +2508,7 @@ public class ServiceB {
 
 
 
-### Springboot自动配置原理
+## Springboot自动配置原理
 
 **总结：**
 
@@ -2429,7 +2558,7 @@ public class ServiceB {
 
 
 
-#### 自动配置类加载文件
+## 自动配置类加载文件
 
 - **Spring Boot 2.x 及以前**
   -  自动配置类的信息存放在 `META-INF/spring.factories` 文件中。
@@ -2457,11 +2586,11 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-### SpringBoot比Spring好在哪里
+## SpringBoot比Spring好在哪里
 
 > 回答：“我认为 Spring Boot 比 Spring 的主要优势在于它大幅**简化了配置**和项目启动过程。传统 Spring 开发需要大量的 XML 或 Java 配置，而 Spring Boot 的自动化配置、Starter 依赖和内嵌服务器使得开发和部署更加轻便、快速。此外，Spring Boot 还在应用监控、健康检查以及微服务架构的支持上表现优秀，这使得整个应用从开发到运维都更加高效与现代化。总的来说，它使得我们能**更专注于业务逻辑**，而无需在繁琐配置上浪费过多时间。”
 
-#### 1. **简化配置和自动化部署**
+1. **简化配置和自动化部署**
 
 - **自动配置（Autoconfiguration）**
    Spring Boot 引入了自动配置机制，可以根据项目依赖、环境和配置文件自动初始化大部分 Bean，无需编写大量的 XML 或 Java 配置代码。这样可以大大减少初期开发工作量，加速项目启动和配置过程。
@@ -2470,15 +2599,14 @@ com.example.autoconfig.OtherAutoConfiguration
 - **内置服务器**
    Spring Boot 提供嵌入式 Tomcat、Jetty 或 Undertow，使得开发者无需额外部署和配置独立的 Web 服务器。这对于快速验证、开发和测试都是非常有利的，尤其在微服务架构中更显优势。
 
-#### 2. **开发效率和项目构建**
+2. **开发效率和项目构建**
 
 - **快速开发与验证**
    借助 Spring Boot 的约定优于配置（Convention over Configuration）理念，开发者可以专注于业务逻辑开发而不是在繁琐的环境搭建上耗费过多精力。快速启动器和内置的服务器特性让应用启动和测试时间大幅降低，从而提高开发效率。
 - **命令行工具与监控支持**
    Spring Boot 提供命令行工具（Spring Boot CLI）和 Actuator 模块，后者内置丰富的监控、健康检查、指标监控等特性，可以帮助开发者更好地管理和监控生产环境中的应用状态，提升运维效率。
 
-
-#### 3. **面向微服务的架构支持**
+3. **面向微服务的架构支持**
 
 - **微服务友好**
    现代应用往往采用微服务架构，而 Spring Boot 无论是在独立部署、容器化部署上，还是与 Spring Cloud 配合时，都能很好地满足微服务需要。简洁的配置和快速响应使得每个服务独立可控，同时便于集成服务注册与发现、配置中心等组件。
@@ -2487,9 +2615,9 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-### Spring依赖注入
+## Spring依赖注入
 
-#### `@Autowired`三种注入方式
+### `@Autowired`三种注入方式
 
 **字段注入**：
 
@@ -2508,7 +2636,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### 为什么Spring推荐用构造方法注入
+### 为什么Spring推荐用构造方法注入
 
 **构造方法注入作用与好处：**
 
@@ -2532,14 +2660,14 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### IoC与DI
+### IoC与DI
 
 - **控制反转（IoC）**：指的是对象的创建、管理和销毁的责任由容器管理，而不是由程序员手动new。开发者只需要定义好各个组件之间的依赖关系；使用容器帮我们实例化的对象，可**降低对象之间的耦合度**；
 - **依赖注入（DI）**：DI是IOC的实现方式，在 IoC 的基础上，Spring 会在容器启动时自动将所需的依赖（Bean）注入到目标对象中，常用方式有构造器注入、Setter 注入和字段注入（通过 `@Autowired`、`@Inject` 或 `@Resource` 注解）。
 
 
 
-#### 自动装配工作流程
+自动装配工作流程
 
 1. **组件扫描**：Spring 启动时，会根据配置的包路径扫描所有被 `@Component`、`@Service`、`@Repository`、`@Controller` 等注解标记的类，并将它们注册为 Spring Bean。
 2. **Bean 注册**：扫描到的类被实例化并注册到 Spring 容器中。
@@ -2553,7 +2681,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### Spring出于什么考虑设计IOC
+### Spring出于什么考虑设计IOC
 
 很怪哦
 
@@ -2579,9 +2707,9 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-### 三个框架及其常用注解
+## 三个框架及其常用注解
 
-#### 关于三个框架
+### 关于三个框架
 
 - **Spring 核心注解** 主要关注**对象管理**、**依赖注入**和**配置**。
 - **Spring MVC 注解** 专注于**Web 层请求处理**。
@@ -2589,7 +2717,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### Spring注解
+### Spring注解
 
 - **@Component**
    标识普通的 Spring Bean，主要用于组件扫描，告诉 Spring 将此类纳入 IoC 容器中管理。
@@ -2610,7 +2738,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### Spring MVC 注解
+### Spring MVC 注解
 
 - **@Controller**
    标识控制器组件，用于处理 Web 请求。它属于 Spring MVC（尽管它本身也被视为一个特殊的 @Component）。
@@ -2635,7 +2763,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### Spring Boot 注解
+### Spring Boot 注解
 
 - **@SpringBootApplication**
    是 Spring Boot 的核心注解，组合了以下三个注解：
@@ -2654,9 +2782,9 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-### MyBatis
+## MyBatis
 
-#### mybatis执行流程
+### mybatis执行流程
 
 简要流程：
 
@@ -2688,7 +2816,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-####  SpringBoot 与 MyBatis 的整合
+###  SpringBoot 与 MyBatis 的整合
 
 每个 SqlSession 默认是开启一个事务的，通过 `commit()` 方法可以提交事务，而通过 `rollback()` 方法可以进行事务回滚。使用完 SqlSession 后必须关闭，以释放资源。而 **MyBatis-Spring 框架**负责自动创建、绑定、提交/回滚和关闭 SqlSession。
 
@@ -2701,7 +2829,7 @@ com.example.autoconfig.OtherAutoConfiguration
 
 
 
-#### mybatis延迟加载
+### mybatis延迟加载
 
 mybatis支持延迟加载，但**默认没有开启**
 
@@ -2772,7 +2900,7 @@ mybatis支持延迟加载，但**默认没有开启**
 
 
 
-#### mybatis一二级缓存
+### mybatis一二级缓存
 
 **springboot中，同一个方法调用多次mapper的同一方法，一级缓存并不会生效，只有加上了`@Transational`注解后，一级缓存才会生效**：没有使用事务时，每次调用 Mapper 方法通常都会开启并关闭一个新的 SqlSession，因此每次查询都不会复用之前查询的缓存数据。而加上了事务注解后，所有的数据库操作会被绑定在**同一个事务以及对应的 SqlSession 中**，从而使得一级缓存得以生效。
 
@@ -2880,11 +3008,11 @@ mybatis支持延迟加载，但**默认没有开启**
 
 
 
-### SpringCloud
+## SpringCloud
 
 一些中间件写在 [12306笔记.md](..\12306项目笔记\12306笔记.md) 里面，例如Seata, Sentinel, OpenFeign等
 
-#### 五大组件
+### 五大组件
 
 - **网关**
   - 网关作为所有外部请求的入口，负责请求路由、认证、权限校验、流量控制以及统一日志和监控等。它可以在第一时间对外部请求进行预处理，并将请求分发到具体的微服务中。
@@ -2943,7 +3071,7 @@ mybatis支持延迟加载，但**默认没有开启**
 
 
 
-#### 注册中心
+### 注册中心
 
 允许各个服务在启动时将自身信息（例如服务名、IP、端口等）**注册**到注册中心，同时其他服务可以通过查询注册中心来动态**获取**可用的服务实例列表，从而实现**动态负载均衡与调用**，而不必手动维护每个服务的地址信息。
 
@@ -2977,7 +3105,7 @@ mybatis支持延迟加载，但**默认没有开启**
 
 
 
-#### 负载均衡
+### 负载均衡
 
 当一个服务需要调用另一个服务时，通常会使用**客户端负载均衡器**（如 Ribbon 或 Spring Cloud LoadBalancer）。这个负载均衡器会从注册中心获取目标服务的所有**可用实例列表**，然后根据特定的算法（例如轮询、随机、权重等）选择一个实例进行调用。
 
@@ -3003,13 +3131,13 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
 
 
-#### 熔断降级
+### 熔断降级
 
 用Sentinel，看12306笔记；
 
 
 
-#### 微服务监控
+### 微服务监控
 
 - 问题定位
 - 性能分析
@@ -3026,9 +3154,9 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
 
 
-### 微服务业务
+## 微服务业务
 
-#### 限流
+### 限流
 
 主要实现方式：
 
@@ -3048,7 +3176,7 @@ Ribbon的**负载均衡策略**：（轮询、权重、随机、区域）
 
 
 
-#### CAP
+## CAP
 
 CAP 定理（Consistency、Availability、Partition tolerance）由 Eric Brewer 教授提出，并由 Gilbert 和 Lynch 从理论上证明，其核心主张是：**一个分布式系统最多只能同时满足一致性、可用性、分区容错性三个特性中的两项。**
 
@@ -3071,7 +3199,7 @@ tip：Seata的AT模式就是AP思想，先全部提交了，保证可用，有�
 
 
 
-#### BASE
+### BASE
 
 BASE 理论是CAP的一种解决思路，可以看作是对 CAP 定理中“一致性”要求的放宽，从而换取高可用性和扩展性。BASE 由三个部分构成：
 
@@ -3084,7 +3212,7 @@ BASE 理论是CAP的一种解决思路，可以看作是对 CAP 定理中“一�
 
 
 
-#### 接口幂等性
+## 接口幂等性
 
 主要讨论分布式事务的**接口**幂等性
 
@@ -3113,7 +3241,7 @@ BASE 理论是CAP的一种解决思路，可以看作是对 CAP 定理中“一�
 
 
 
-#### 分布式任务调度
+## 分布式任务调度
 
 常见技术：
 
@@ -3156,9 +3284,9 @@ XXL-Job还能：
 
 
 
-## Java基础
+# Java基础
 
-### 静态代理
+## 静态代理
 
 静态代理其实没什么用，功能和动态代理一样，但是代码却十分复杂，每个类都需要写单独的代理代码，修改起来也麻烦；
 
@@ -3225,9 +3353,9 @@ public class Client {
 
 
 
-### 动态代理
+## 动态代理
 
-#### JDK动态代理
+## JDK动态代理
 
 关键是`Proxy`类提供的`newProxyInstance`方法，通过反射获取到接口的构造方法，返回代理对象；
 
@@ -3376,9 +3504,9 @@ public class ProxyUtil {
 
 
 
-### IO
+## IO
 
-#### 用IO流写文件的底层原理
+### 用IO流写文件的底层原理
 
 对于下面这样一个Java代码，这里给出大致的底层原理
 
@@ -3396,7 +3524,13 @@ fos.close();
 
 
 
-#### NIO零拷贝
+## NIO
+
+- 传统的 Java I/O（BIO）是基于流的阻塞模型，读写时会阻塞线程，若并发大量连接容易导致线程资源瓶颈。
+
+- NIO 支持**同步非阻塞** I/O：线程可以发起读/写操作后立即返回去执行其他任务，一旦数据准备好再继续处理，从而提升效率和响应性
+
+### 零拷贝
 
 传统拷贝：
 
@@ -3429,9 +3563,9 @@ fos.close();
 
 
 
-### stream流
+## stream流
 
-#### map与flatMap
+### map与flatMap
 
 map一般用于处理**一对一**映射：
 
@@ -3460,12 +3594,55 @@ System.out.println(upperWords); // 输出: [APPLE, BANANA, CHERRY]
 
 
 
+## JDK9字符串
 
-## 集合
+底层把原来jdk8的`char`数组，换成了`byte`数组；
 
-### ArrayList
+- **纯**英文字符串：节省空间
 
-#### 数组
+  - `char ch = 'a'`，占2个字节
+  - `byte bt = 97`，占1个字节
+
+- 编码方式
+
+  - 纯英文会使用`LATIN1`编码
+
+  - 否则会使用`UTF16`编码
+
+  - ```java
+    // 源码中用byte来标识
+    @Native static final byte LATIN1 = 0;
+    @Native static final byte UTF16  = 1;
+    ```
+
+- 中文使用**UTF16**编码，1个字占16位，2个字节，及2个`byte`数组元素；
+
+  - 1个字会被拆分出前8位和后8位，成为2个元素；
+
+- 中英混合的情况下，1个英文字母也占2个字节/2个元素；
+
+计算字符串长度的代码有点意思：
+
+```java
+// 如果是UTF16，则右移一位，即除以2
+public int length() {
+    return value.length >> coder();
+}
+
+// 返回当前的编码类型
+byte coder() {
+    return COMPACT_STRINGS ? coder : UTF16;
+}
+```
+
+
+
+
+# 集合
+
+## ArrayList
+
+### 数组
 
 创建一个数组时，在**栈内存**有指向**堆内存**中的首地址的指针；
 
@@ -3475,7 +3652,7 @@ ArrayList中的元素就保存于：`transient Object[] elementData;`
 
 ![](image/java-数组内存.png)
 
-#### 构造方法
+### 构造方法
 
 - 基本属性
 
@@ -3509,7 +3686,7 @@ ArrayList中的元素就保存于：`transient Object[] elementData;`
 
 
 
-#### 扩容
+### 扩容
 
 每次扩容完后用`Arrays.copyOf(T[] original, int newLength)`**拷贝数组**
 
@@ -3560,7 +3737,7 @@ ArrayList中的元素就保存于：`transient Object[] elementData;`
 
 
 
-#### Arrays.asList()和List.of()
+### Arrays.asList()和List.of()
 
 List和数组相互转换：
 
@@ -3615,7 +3792,7 @@ List<Integer> list1 = new ArrayList<>(Arrays.asList(arr)); // 可变的 List
 
 
 
-#### ArrayList和LinkedList区别
+### ArrayList和LinkedList区别
 
 - 底层**数据结构**
 
@@ -3649,7 +3826,7 @@ List<Integer> list1 = new ArrayList<>(Arrays.asList(arr)); // 可变的 List
 
 
 
-### SynchronizedList
+## SynchronizedList
 
 通过`Collections`类创建线程安全的 List 集合：
 
@@ -3708,9 +3885,9 @@ public class Collections {
 
 
 
-### HashMap
+## HashMap
 
-#### 红黑树
+### 红黑树
 
 tip：红黑树节点中包含一个指向父节点的属性，用来旋转操作
 
@@ -3737,7 +3914,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-#### 底层原理
+### 底层原理
 
 - 数据结构
 
@@ -3792,7 +3969,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-#### **扩容机制**
+### **扩容机制**
 
 - 每次扩容是扩容到原来的**2倍**
 - 具体流程
@@ -3812,7 +3989,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-#### 寻址算法
+### 寻址算法
 
 其实内容包含在上面了，这里总结和详讲
 
@@ -3847,7 +4024,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-#### JDK1.7多线程死循环
+### JDK1.7多线程死循环
 
 - 比如说，现在有两个线程：
 - 线程一读取到当前的hashmap数据，数据中有一个链表**A→B**，在准备扩容时，线程二介入
@@ -3858,7 +4035,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-### ConcurrentHashMap
+## ConcurrentHashMap
 
 - **JDK1.7**
   - 数据结构：
@@ -3894,7 +4071,7 @@ tip：红黑树节点中包含一个指向父节点的属性，用来旋转操�
 
 
 
-### HashSet
+## HashSet
 
 HashSet就是基于HashMap实现的，值就是map的**key**，而map的**value**是一个Object对象，一个**假的值**；
 
@@ -3923,11 +4100,11 @@ public boolean contains(Object o) {
 
 
 
-## 并发编程
+# 并发编程
 
-### 线程基础
+## 线程基础
 
-#### 创建线程的方式
+### 创建线程的方式
 
 - **继承Thread类**
 
@@ -4049,7 +4226,7 @@ public boolean contains(Object o) {
 
 
 
-#### 线程状态转换
+### 线程状态转换
 
 `Thread`类中定义了**6种**状态
 
@@ -4075,6 +4252,10 @@ public enum State {
     // 等待状态
     WAITING,
 
+    /**
+     * 调用带参数的wait(timeout);
+     * 调用sleep();
+    */
     // 指定时间等待状态：具有指定等待时间的等待线程的线程状态
     TIMED_WAITING,
 
@@ -4087,7 +4268,7 @@ public enum State {
 
 ![](image/并发编程-线程状态转换.png)
 
-#### JVM 线程状态 与 操作系统阻塞机制的对照
+### JVM 线程状态 与 操作系统阻塞机制的对照
 
 操作系统层面：
 
@@ -4103,7 +4284,7 @@ public enum State {
 
 
 
-#### 关于`wait(),notify()`等方法
+关于`wait(),notify()`等方法
 
 - 当一个线程调用某对象的 `wait()` 方法时，必须在该对象的**同步代码块或同步方法**内进行
   - 有参的`wait(timeout)` 其中的`timeout` 是最大等待时间（单位：毫秒）
@@ -4176,7 +4357,7 @@ public class WaitNotifyExample {
 
 
 
-#### 对象监视器与notify()
+### 对象监视器与notify()
 
 每个对象在创建时都会**隐式地关联一个监视器锁**
 
@@ -4196,7 +4377,7 @@ public class WaitNotifyExample {
 
 
 
-#### 保证线程顺序执行
+### 保证线程顺序执行
 
 - `join()`方法
 
@@ -4301,7 +4482,7 @@ public class WaitNotifyExample {
 
     
 
-#### 退出正在运行的线程
+### 退出正在运行的线程
 
 - 使用`stop()`方法**（已弃用）**
   - `Thread.stop()`方法虽然可以强制终止线程，但因其设计存在严重的安全隐患，早在**Java 1.2**版本后就被官方标记为**废弃方法**
@@ -4424,9 +4605,9 @@ public class WaitNotifyExample {
 
     
 
-### 线程安全
+## 线程安全
 
-#### synchronized底层原理
+### synchronized底层原理
 
 synchronized**对象锁**采用**互斥**的方式让同一时刻**至多只有一个线程**能持有对象锁，其它线程再想获取这个**对象锁**时就会阻塞
 
@@ -4457,7 +4638,7 @@ synchronized**对象锁**采用**互斥**的方式让同一时刻**至多只有�
 
 
 
-#### 锁升级
+### 锁升级
 
 先总结一下！
 
@@ -4518,7 +4699,7 @@ synchronized**对象锁**采用**互斥**的方式让同一时刻**至多只有�
 
 
 
-#### JMM
+### JMM
 
 JMM(Java Memory Model，java内存模型)
 
@@ -4562,7 +4743,7 @@ JMM：
 
 
 
-#### CAS
+### CAS
 
 CAS（Compare-And-Swap，比较并交换）
 
@@ -4589,7 +4770,7 @@ CAS的缺点：
 
 
 
-#### volatile
+### volatile
 
 - **线程间的可见性**
 
@@ -4599,8 +4780,9 @@ CAS的缺点：
     - 当操作一个volatile变量时，线程会绕过缓存，直接与主内存交互，具体来说：
       - 操作**普通变量**：变量从主存读入工作内存（缓存、寄存器等），之后再写回主内存；
       - 操做**volatile变量**：写时将工作内存的值刷新到主内存，读时直接读取主内存中的数据；
+      - 这样的操作基于硬件层面的 **MESI**协议；
 
-  - 使用 volatile 关键字后，每次读取该变量时都会**直接从主内存中获取**，而写入时也会立刻刷新到主内存。这样可以确保各个线程都能看到变量的最新状态
+  - 使用 volatile 关键字后，每次读取该变量时都会**直接从主内存中获取**，而写入时也会立刻刷新到主内存。这样可以确保各个线程都能看到变量的最新状态；
 
   - ```java
     public class VolatileVisibilityDemo {
@@ -4668,7 +4850,7 @@ CAS的缺点：
 
 
 
-#### AQS
+### AQS
 
 **AQS** 的全称为 **AbstractQueuedSynchronizer** （抽象队列同步器）在 `java.util.concurrent.locks` 包下，是构建锁或其他同步组件的**基础框架**
 
@@ -4754,7 +4936,7 @@ AQS 定义两种资源共享方式：
 
 
 
-#### ReentrantLock
+### ReentrantLock
 
 `ReentrantLock` 实现了 `Lock` 接口，是一个**可重入且独占式**的锁；内部有继承了`AQS`的内部实现类，有公平和非公平2种；
 
@@ -4859,7 +5041,7 @@ if (lock.tryLock()) {
 
 
 
-#### Lock
+### Lock
 
 Lock是一个**接口**，常见的实现类有：**ReentrantLock**，**ReentrantReadWriteLock**中的内部类**ReadLock**和**WriteLock**
 
@@ -4879,7 +5061,8 @@ Lock与synchronized：
   - 在**竞争激烈时**，Lock 的实现通常会提供更好的性能
 
 
-#### 死锁的产生与诊断
+
+### 死锁的产生与诊断
 
 开发中可能产生死锁的情况：
 
@@ -4925,7 +5108,7 @@ Lock与synchronized：
 
 
 
-#### Java并发编程三大特性
+## Java并发编程三大特性
 
 - **原子性**
   - 和数据库的原子性不太一样
@@ -4945,9 +5128,9 @@ Lock与synchronized：
 
 
 
-### 线程池
+## 线程池
 
-#### execute和submit
+### execute和submit
 
 - **execute** 
   - 只能执行`Runnable`任务
@@ -4960,7 +5143,7 @@ Lock与synchronized：
 
 
 
-#### 线程池的核心参数
+### 线程池的核心参数
 
 1. **`corePoolSize`（核心线程数）**
    - 线程池中**保持存活**的核心线程数量，即使它们处于空闲状态。
@@ -5029,7 +5212,7 @@ public class ThreadPoolExecutorExample {
 
 
 
-#### 线程池的任务执行流程
+### 线程池的任务执行流程
 
 - 初始为空
 
@@ -5044,7 +5227,7 @@ public class ThreadPoolExecutorExample {
 
 
 
-#### 线程池中常见的阻塞队列
+### 线程池中常见的阻塞队列
 
 - **ArrayBlockingQueue**
   - 底层由数组实现
@@ -5082,7 +5265,7 @@ public class ThreadPoolExecutorExample {
 
 
 
-#### 线程池种类
+### 线程池种类
 
 最后都需要用`.shutdown()`方法关闭线程池。
 
@@ -5199,7 +5382,7 @@ public class ThreadPoolExecutorExample {
 
 
 
-#### 确定核心线程数
+### 确定核心线程数
 
 - 高并发、任务执行时间短  → **(CPU核数 + 1)**，减少线程**上下文的切换**
 - 并发不高、任务执行时间长
@@ -5211,9 +5394,9 @@ public class ThreadPoolExecutorExample {
 
 
 
-### 多线程业务场景
+## 多线程业务场景
 
-#### CountDownLatch与@Async
+### CountDownLatch与@Async
 
 例子：主业务中，需要等待多个异步业务执行完成后，再执行其他内容，则可以给这些异步业务传入`CountDownLatch`对象，里面调用`countDown()`，然后在主业务中调用`await()`
 
@@ -5283,7 +5466,7 @@ public class TaskController {
 
 
 
-#### 线程池
+### 线程池
 
 例子：主业务中需要调用其他多个微服务的接口，并且需要把各个接口返回的数据做汇总，这时就可以创建线程池，同时调用这多个接口，然后用`Future`的`get()`方法处理返回参数
 
@@ -5336,7 +5519,7 @@ class RemoteCallTask implements Callable<String> {
 
 
 
-#### Semaphore
+### Semaphore
 
 用于**控制某个方法允许并发访问线程的数量**，用法和操作系统里的**PV操作**一样，使用`.acquire()`方法和`.release()`方法
 
@@ -5369,7 +5552,7 @@ public class ResourceService {
 
 
 
-#### 1个线程等待3个并行线程
+### 1个线程等待3个并行线程
 
 使用`CompletableFuture`可以实现；也可以使用初始值为3的`CountDownLatch`
 
@@ -5419,7 +5602,7 @@ public class TestJava {
 
 
 
-#### 2个线程交替打印数字
+### 2个线程交替打印数字
 
 ```java
 public class ThreadInTurn {
@@ -5467,9 +5650,9 @@ public class ThreadInTurn {
 
 
 
-### ThreadLocal
+## ThreadLocal
 
-#### ThreadLocal常见方法
+### ThreadLocal常见方法
 
 这些方法底层很多都调用了C/C++实现的方法，例如`remove()`最终会调用到`private native void clear0()`方法
 
@@ -5522,7 +5705,7 @@ public class ThreadInTurn {
 
 
 
-#### ThreadLocal底层原理
+### ThreadLocal底层原理
 
 ThreadLocal是多线程中对于解决线程安全的一个操作类，它会为每个线程都分配一个独立的线程副本从而解决了变量并发访问冲突的问题。ThreadLocal同时实现了线程内的资源共享。
 
@@ -5585,7 +5768,7 @@ graph LR
 
 
 
-#### ThreadLocal内存泄漏问题
+### ThreadLocal内存泄漏问题
 
 一句话总结：**`ThreadLocal`对象失去引用，`entry`的`key`被回收，而`value`仍被`entry`引用，但是却无法再定位到`entry`；**
 
@@ -5666,9 +5849,9 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-## JVM
+# JVM
 
-### 4种引用类型
+## 4种引用类型
 
 **一、强引用（Strong Reference）**
 
@@ -5727,7 +5910,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-### JVM基本介绍
+## JVM基本介绍
 
 **J**ava **V**irtual **M**achine 是Java程序的运行环境（本质上是java二进制字节码的运行环境）
 
@@ -5749,7 +5932,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### PC程序计数器
+### PC程序计数器
 
 - 线程私有的，每个线程一份，**无线程安全问题**；
 - 无**OOM**
@@ -5764,7 +5947,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 堆
+### 堆
 
 堆的存取速度通常比栈慢，但堆空间可动态变化
 
@@ -5777,7 +5960,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 虚拟机栈
+### 虚拟机栈
 
 栈的存取速度通常比堆快，但栈空间固定
 
@@ -5802,7 +5985,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 本地方法栈
+### 本地方法栈
 
 和虚拟机栈所发挥的作用非常相似，区别是：**虚拟机栈为虚拟机执行 Java 方法 （也就是字节码）服务，而本地方法栈则为虚拟机使用到的 Native 方法服务。** 在 HotSpot 虚拟机中和 Java 虚拟机栈合二为一。
 
@@ -5812,7 +5995,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 方法区
+### 方法区
 
 可以通过`-XX:MaxMetaspaceSize=8m`参数指定元空间大小
 
@@ -5823,6 +6006,9 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 - 方法区(Method Area)是**各个线程共享**的内存区域
 - 主要存储：**类结构**、**字节码**、**方法信息**、[运行时常量池](#常量池与运行时常量池)
 - 虚拟机启动的时候创建，关闭虚拟机时释放
+- 会在`full gc`时做垃圾回收
+  - 当某个 `Class` 和其 `ClassLoader` 在堆中不再可达，被正常的 GC 回收后，其对应的类元数据也随即可被释放（这一机制只在使用**自定义的类加载器**时才可能生效）
+
 - 如果方法区域中的内存无法满足分配请求，则会抛出`OutOfMemoryError: Metaspace`
 
 ![](image/jvm-方法区.png)
@@ -5831,7 +6017,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 常量池与运行时常量池
+### 常量池与运行时常量池
 
 **常量池**
 
@@ -5849,7 +6035,7 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-#### 直接内存
+### 直接内存
 
 - 直接内存并不属于JVM中的内存结构，或者说不属于 JVM 运行时数据区的一部分；通过 NIO 类引入，是一种堆外内存；
   - 直接内存是一种特殊的内存缓冲区，不在 Java 堆或方法区中分配的，通过 **JNI**(Java Native Interface) 的方式在本地内存上分配
@@ -5858,6 +6044,8 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 #### 常规IO与NIO
+
+可以看[NIO](#NIO)那一节，这里的直接内存应该就是`mmap`方式会用到的；
 
 - 常规IO
   - 先把文件放到系统缓存，再从系统缓存读到java堆内存中的java缓冲区
@@ -5868,13 +6056,13 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-### 类加载器
+## 类加载器
 
 JVM只会运行二进制文件，类加载器的作用就是将**字节码文件加载到JVM中**（读取`.class`文件生成二进制数据的内存表示），从而让Java程序能够启动起来；
 
 
 
-#### 关于static变量的存储位置
+### 关于static变量的存储位置
 
 （存疑）
 
@@ -5884,7 +6072,7 @@ JVM只会运行二进制文件，类加载器的作用就是将**字节码文件
 
 
 
-#### 编译期常量的内联引用
+### 编译期常量的内联引用
 
 编译期常量：`static final 基本数据类型或String`
 
@@ -5930,7 +6118,7 @@ public class B {
 
 
 
-#### 类加载器分类
+### 类加载器分类
 
 自定义类加载器：继承`java.lang.ClassLoader`类
 
@@ -5938,7 +6126,7 @@ public class B {
 
 
 
-#### 双亲委派机制
+### 双亲委派机制
 
 注意“双亲”其实是parent，就是父级的意思；
 
@@ -5967,7 +6155,7 @@ public abstract class ClassLoader {
 
 
 
-#### 类加载过程
+### 类加载过程
 
 在 JVM 中，类的加载（loading）通常采用“**延迟加载**”（lazy loading）机制——只有在首次主动使用时才会将对应的 `.class` 文件读入内存并生成 `Class` 对象；
 
@@ -5984,7 +6172,7 @@ public abstract class ClassLoader {
   - （下图还展示了后续创建对象时需要在对象头指向Class对象）
 
 
-![jvm-类装载-加载](jvm-类装载-加载.png)
+![jvm-类装载-加载](image/jvm-类装载-加载.png)
 
 **连接**：
 
@@ -5995,9 +6183,9 @@ public abstract class ClassLoader {
 
 2. **准备**
    - 为类变量（`static`变量）分配内存（**注意是堆内存**），并设置类变量初始值
-     - `static final`变量的基本类型，以及字符串常量，值已确定，赋值在**准备阶段**完成
+     - `static final`: 基本类型以及字符串常量，值已确定，赋值在**准备阶段**完成
      - `static`：分配空间在**准备阶段**完成(设置默认值)，赋值在**初始化阶段**完成
-     - `static final`变量的引用类型，那么赋值也会在**初始化阶段**完成
+     - `static final`: 引用类型，那么赋值会在**初始化阶段**完成
 3. **解析**
    - 把类中常量池的**符号引用**转换为**直接引用**，也就是得到目标（类、字段、方法）在内存中的指针和偏移量
 
@@ -6019,9 +6207,9 @@ public abstract class ClassLoader {
 
 
 
-### 垃圾回收
+## 垃圾回收
 
-#### 定位垃圾
+### 定位垃圾
 
 - **引用计数法**（不采用）
   - 在对象头记录被引用的次数
@@ -6043,7 +6231,7 @@ public abstract class ClassLoader {
 
 
 
-#### 垃圾回收算法
+### 垃圾回收算法
 
 - 标记清除算法
   - ![](image/jvm-垃圾回收-标记清除算法.png)
@@ -6054,7 +6242,7 @@ public abstract class ClassLoader {
 
 
 
-#### 分代回收
+### 分代回收
 
 堆内存划分：
 
@@ -6070,7 +6258,7 @@ public abstract class ClassLoader {
 
 
 
-##### 提前晋升老年代
+#### 提前晋升老年代
 
 一般是15次回收、大对象，这2种情况进入老年代；
 
@@ -6080,31 +6268,29 @@ public abstract class ClassLoader {
 
 
 
-##### 内存担保机制
+#### 内存担保机制
 
 或称为“**空间分配担保**”；
 
 发生 Minor GC，在晋升到老年代时，老年代可能没有足够的连续空间容纳晋升的对象；该机制就是为了确保在 Minor GC 之前老年代本身还有容纳新生代所有对象的剩余空间；
 
-采取的策略是：只要老年代的连续空间大于新生代对象总大小或者历次晋升的平均大小，就会进行 **Minor GC**，否则将进行 **Full GC**
+采取的策略是：只要老年代的连续空间大于新生代对象总大小或者历次晋升的平均大小，就会进行 **Minor GC**，否则将进行 **Full GC**;
 
 
 
-
-
-#### 各种GC
+### 各种GC
 
 - **MinorGC(Young GC)**：`(/ˈmaɪ.nər/)` 发生在**新生代**的垃圾回收，STW暂停时间短；
-- **Major GC**：CMS收集器中，当老年代满 或 年轻代对象晋升到老年代的速度过快 时会触发 Major GC。目前只有CMS收集器会有单独收集老年代的行为。其他收集器均无此行为。
+- **Major GC**：CMS收集器中，当老年代满 或 年轻代对象晋升到老年代的速度过快 时会触发 Major GC。目前只有CMS收集器会有单独收集老年代的行为。其他收集器均无此行为；
 - **Mixed GC**：新生代 +老年代**部分区域**的垃圾回收，G1 收集器特有；
 - **FullGC**：新生代 +老年代**完整**垃圾回收，STW暂停时间长，应尽力避免；
-  - 直接调用`System.gc()`或`Runtime.getRuntime().gc()`方法时，虽然不能保证立即执行，但JVM会尝试执行FullGC；
+  - 直接调用`System.gc()`或`Runtime.getRuntime().gc()`方法时，虽然不能保证立即执行，但JVM会尝试执行 FullGC；
 
 - STW(Stop-The-World)：暂停所有应用程序线程，等待垃圾回收的完成；
 
 
 
-#### 垃圾收集器
+### 垃圾收集器
 
 关于默认收集器：
 
@@ -6150,11 +6336,11 @@ public abstract class ClassLoader {
 - **CMS 垃圾收集器（并发标记清除）**
   - Concurrent Mark Sweep 是一款以获取最短回收停顿时间为目标的收集器，停顿时间短，用户体验就好。其最大特点是**在进行垃圾回收时，应用仍然能正常运行**。
   - 用于**老年代**，新生代通常搭配 **Parallel New** 收集器
-  - 使用**标记-清除算法**
-    - 初始标记： 短暂停顿，标记直接与 root 相连的对象（根对象）
+  - 使用**标记-清除**算法
+    - 初始标记： 短暂停顿，标记直接与 root 相连的对象（根对象）➡️ 第1次 STW
     - 并发标记： 用一个闭包结构去记录可达对象;
-    - 重新标记**：** 重新标记阶段就是为了修正并发标记期间因为用户程序继续运行而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段的时间稍长，远远比并发标记阶段时间短
-    - 并发清除**：** 开启用户线程，同时 GC 线程开始对未标记的区域做清扫
+    - 重新标记**：** 重新标记阶段就是为了修正并发标记期间因为用户程序继续运行而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段的时间稍长，远远比并发标记阶段时间短； ➡️ 第2次 STW
+    - 并发清除**：** 开启用户线程，同时 GC 线程开始对未标记的区域做清扫；
   - ![](image/jvm-垃圾回收-CMS回收器.png)
   - **缺点**：
     - 对 CPU 资源敏感；
@@ -6189,7 +6375,7 @@ public abstract class ClassLoader {
   
     - 发生原因：
   
-      - 对象生成速度 快于 垃圾回收速度，或者是有大量的大对象等，使得标记工作无法在下一次回收前完成；也有可能是GC Roots 集合过大，超时或溢出；最可能是**YoungGC复制存活对象时空间不足**
+      - 对象生成速度 快于 垃圾回收速度，或者是有大量的大对象等，使得标记工作无法在下一次回收前完成；也有可能是GC Roots 集合过大，超时或溢出；最可能是**YoungGC复制存活对象时空间不足**；
   
     - 结果：
   
@@ -6203,7 +6389,7 @@ public abstract class ClassLoader {
 
 
 
-#### 元空间垃圾回收
+### 元空间垃圾回收
 
 - 元空间垃圾回收的触发条件：
   - 元空间的使用量达到`MaxMetaspaceSize`设置的值；
@@ -6212,9 +6398,9 @@ public abstract class ClassLoader {
 
 
 
-### JVM实践
+## JVM实践
 
-#### JVM调优参数设置
+### JVM调优参数设置
 
 - war包部署在tomcat中
 
@@ -6230,7 +6416,7 @@ public abstract class ClassLoader {
 
     
 
-#### JVM调优参数
+### JVM调优参数
 
 直接看https://javaguide.cn/java/jvm/jvm-parameters-intro.html
 
@@ -6274,7 +6460,7 @@ public abstract class ClassLoader {
 
 
 
-#### JVM调优工具
+### JVM调优工具
 
 - 命令工具
   - jps
@@ -6295,15 +6481,15 @@ public abstract class ClassLoader {
 
 
 
-## 设计模式
+# 设计模式
 
-### 开闭原则
+## 开闭原则
 
 开闭原则 (The Open/Closed Principle, OCP) 规定“软件中的对象（类，模块，函数等等）应该**对扩展开放，对修改封闭**——即一个实体允许在**不改变它的源代码**的前提下**变更它的行为**；
 
 
 
-### 简单工厂模式
+## 简单工厂模式
 
 以图里的咖啡店为例子，获取咖啡不需要自己new一个对应种类的咖啡对象，而是通过`CoffeeFactory`工厂来创建，例如：
 
@@ -6319,7 +6505,7 @@ Coffee coffee = simpleCoffeeFactory.createCoffee("American")
 
 ![](image/设计模式-简单工厂模式.png)
 
-### 工厂方法模式
+## 工厂方法模式
 
 tip：Spring底层就是工厂方法
 
@@ -6345,7 +6531,7 @@ Coffee coffee = coffeeStore.createCoffee();
 
 
 
-### 抽象工厂模式
+## 抽象工厂模式
 
 假设现在咖啡店不仅卖咖啡，还卖甜品。甜品可能有蛋糕、曲奇、布丁等，而这些甜品往往和咖啡有特定的搭配风格。此时，我们希望创建一整套“**产品族**”，保证一组产品之间的风格是一致的，比如意大利风格、美式风格等
 
@@ -6364,7 +6550,7 @@ Coffee coffee = coffeeStore.createCoffee();
 
 
 
-### 策略模式
+## 策略模式
 
 代码中有冗长的 if-else 或 switch 分支判断都可以考虑采用策略模式优化；
 
@@ -6443,7 +6629,7 @@ Coffee coffee = coffeeStore.createCoffee();
 
 
 
-### 责任链模式
+## 责任链模式
 
 为了避免请求发送者与多个请求处理者耦合在一起，将所有请求的处理者通过前一对象记住其下一个对象的引用而连成一条链；当有请求发生时，可将请求沿着这条链传递，直到有对象处理它为止。
 
@@ -6504,13 +6690,13 @@ public static void main(string[] args){
 
 
 
-### 单例模式
+## 单例模式
 
 即系统里这1个类只能有1个对象；
 
 注意代码关键点：**私有化构造函数**
 
-#### 饿汉式 Eager Initialization
+### 饿汉式 Eager Initialization
 
 在类加载时就完成实例化，线程安全，但若实例过大或未必使用则可能造成资源浪费
 
@@ -6546,7 +6732,7 @@ public enum SingletonEnum {
 SingletonEnum.INSTANCE.doSomething();
 ```
 
-#### 懒汉式Lazy Initialization
+### 懒汉式Lazy Initialization
 
 在第一次调用时才创建实例，延迟加载，但需要考虑**线程安全**
 
@@ -6614,7 +6800,7 @@ public class SingletonHolder {
 
 
 
-### 生成器模式
+## 生成器模式
 
 Builder Pattern
 
@@ -6728,19 +6914,19 @@ User.simple().name("张三").email("a@b.com").build()
 
 
 
-### Spring 中用到的设计模式
+## Spring 中用到的设计模式
 
 ![](image/设计模式-spring.png)
 
-### SpringBoot 中用到的设计模式
+## SpringBoot 中用到的设计模式
 
 ![](image/设计模式-springboot.png)
 
 
 
-## 场景
+# 场景
 
-### 单点登录
+## 单点登录
 
 SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就可以访问其他所有信任的应用系统；
 
@@ -6748,7 +6934,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 权限认证
+## 权限认证
 
 **R**ole-**B**ased **A**ccess **C**ontrol 基于角色的访问控制：建立5张表，用户表  + 角色表 + 权限表 + 2张中间表；
 
@@ -6756,7 +6942,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 数据上传在网络中的安全性
+## 数据上传在网络中的安全性
 
 ![](image/企业场景-数据上传安全.png)
 
@@ -6769,7 +6955,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 项目中遇到的棘手问题
+## 项目中遇到的棘手问题
 
 可以从以下4个方面来回答。
 
@@ -6783,7 +6969,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 日志收集
+## 日志收集
 
 - 直接存储成`log`文件
   - 放入`/resources/logback-spring.xml`文件，里面配置日志输出的地址、格式等
@@ -6805,7 +6991,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 生产问题排查
+## 生产问题排查
 
 - 先分析日志，通常在业务中都会有日志的记录，或者查看系统日志，或者查看日志文件，然后定位问题
 - 远程debug(通常公司的正式环境(生产环境)是不允许远程debug的。一般远程debug都是公司的测试环境，方便调试代码)
@@ -6813,7 +6999,7 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 定位系统瓶颈
+## 定位系统瓶颈
 
 ![](image/企业场景-定位系统瓶颈.png)
 
@@ -6821,11 +7007,85 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
-### 运行一段时间后偶发卡顿
+## 运行一段时间后偶发卡顿
 
 问题：对于一个Springcloud微服务项目，首先是分布式部署，然后java服务器连接一个ES，在项目运行初期没事，每个ES查询请求都是10ms以内完成，经过压力测试也没发现问题；但是，当项目运行时间变长，比如一周以后，会偶发地出现某些请求很慢，达到甚至1000ms的时间，注意是偶发，大部分请求还是正常；
 
 原因：代码可能写得有问题（比如ThreadLocal内存泄漏），堆中的**对象越来越多**；对象多就可能导致出现并发失败的问题，触发FullGC（单线程，性能低），STW时间过长；或者是对象多的时候，并发标记/重新标记寻找root的时间也会变长；这样就会出现偶发的卡顿；
 
 同时，如果元空间的数据太多也会，例如Groovy脚本加载成Class文件并使用后未被卸载
+
+
+
+
+
+# 其他面试题
+
+## 大量数据排序
+
+磁盘中有21亿个整型数据，如何排序？
+
+归并排序；
+
+如果这些数据没有重复，这么在O(n)复杂度下排序？
+
+桶排序，bitmap；
+
+
+
+## CPU代码执行的过程
+
+Java代码执行的整个流程：
+
+1. **源码 to 字节码**：java源代码文件`.java`，经由`javac`编译为java字节码文件`.class`；
+2. **启动JVM**：`java`命令启动一个**JVM进程**，加载 Java 运行时环境（**JRE**）；
+3. **加载类**：由类加载器加载`.class`文件，其中包含字节码校验等；
+4. **执行引擎**
+   - 初始执行阶段：由**解释器**逐行执行；
+   - JVM识别出热点（hot spot）后，即时编译器**JIT**编译为机器码执行（CPU直接执行）;
+
+实际上，CPU 执行的是 JVM 输出的本地机器码；
+
+#### JVM模板解释器
+
+首先，`.class`字节码的主体中，每行类似于汇编语言中的一个指令，我们认为解释器逐行执行这些指令；
+
+JVM的解释器叫做**模板解释器**，相比传统解释器， 解释器在解释行的时候不需要遍历查找对应的机器码；
+
+- JVM启动时：会为每个 opcode（字节码操作码） 生成特定架构(x86/ARM)的本地机器码，具体来说是一个256个元素的**指针数组**，每个元素存储**对应字节码指令的机器码**的起始地址
+- 执行字节码：对于每一行，直接跳转到对应的机器码的起始地址，然后JVM会交由CPU直接执行这个机器码；
+
+
+
+## 大模型服务通信
+
+### 流式传输
+
+流式传输基于SSE协议，服务端与客户端建立持久化**HTTP长连接**后，模型每生成一个文本块（chunk），立即通过连接**推送**给客户端；
+
+关于SSE协议：
+
+- **HTTP协议栈实现**：SSE使用标准的HTTP/1.1或HTTP/2协议进行通信，不需要协议升级过程；
+- **请求-响应模型扩展**：客户端发送常规HTTP GET请求，但服务端不立即关闭连接，而是保持打开状态持续发送数据
+
+- **单向推送**：SSE协议仅支持服务器单方面向客户端推送数据，非常适合大模型逐token生成并实时返回的场景；
+
+```
+客户端: GET /stream HTTP/1.1
+        Accept: text/event-stream
+        Connection: keep-alive
+
+服务端: HTTP/1.1 200 OK
+        Content-Type: text/event-stream
+        Cache-Control: no-cache
+        Connection: keep-alive
+        
+        data: {"token": "Hello"}
+        
+        data: {"token": " world"}
+        
+        ...
+```
+
+服务端返回的数据以`data: `前缀分隔，每段以`\n\n`结束；
 

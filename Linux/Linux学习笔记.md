@@ -4,6 +4,8 @@
 
 教程使用的是centOS，我自己用的是ubuntu，部分命令有所区别
 
+Docker教程来自尚硅谷：https://www.bilibili.com/video/BV1Zn4y1X7AZ/?spm_id_from=333.1387.favlist.content.click&vd_source=bcf74066f3a850447ee698d388e1d9e2
+
 
 
 ## 目录结构

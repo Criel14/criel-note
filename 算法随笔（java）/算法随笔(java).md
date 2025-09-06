@@ -2,6 +2,68 @@
 
 
 
+## ACM模式输入
+
+### Scanner
+
+用起来很简单，每次用`nextXxx()`获取一个想要的元素；
+
+但是读取大量数据时速度很慢；
+
+```java
+import java.util.*; // Scanner所在的包
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+
+        // 读数组
+        int n = in.nextInt();
+        int[] nums = new int[n];
+        for (int i = 0; i < n; i++) {
+            nums[i] = in.nextInt();
+        }
+
+        // 读字符串
+        String s1 = in.next();
+        // 读一行字符串
+        String s2 = in.nextLine();
+    }
+}
+```
+
+
+
+### BufferedReader
+
+需要抛出 `IOException` 异常；
+
+- `readLine()`方法读取一行；
+- `split("\\s+")`以一个或多个空白字符分割；
+  - `\s`在正则表达式里表示空白字符：包括空格、制表符、换页符
+  - `+`表示匹配一个或多个
+  - 前面多一个`\`其实就是转义字符，为了Java能知道这是正则表达式，让字符串字面量真正包含一个 `\`
+- `trim()`方法消除前后多余的空格；
+
+```java
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        // 读数组
+        int n = Integer.parseInt(br.readLine().trim());
+        int[] nums = new int[n];
+        String[] strings = br.readLine().trim().split("\\s+");
+        for (int i = 0; i < n; i++) {
+            nums[i] = Integer.parseInt(strings[i]);
+        }
+    }
+}
+```
+
+
+
 ## 字符串
 
 ### 最长回文字串
@@ -244,7 +306,7 @@ public long quickPow(long num, long pow) {
     return ans;
 }
 
-// 如果位数很大，需要取模，则在2个地方取模（注意这里不用 *= ，必须乘完再取模，否则会溢出）
+// 如果位数很大，需要取模，则在2个地方取模（注意这里不能用 *= ，必须乘完再取模，否则会溢出）
 public long quickPow(long num, long pow, long mod) {
     long ans = 1;
     while (pow > 0) {
@@ -1065,6 +1127,8 @@ class LRUCache extends LinkedHashMap<Integer, Integer>{
 /**
  * 参数说明：对数组arr的[lo,hi]闭区间做快速排序（升序）
  */
+
+// do-while版本（Hoare分区法）：可能更好记一点
 private void quickSort(int[] arr, int lo, int hi) {
     if (lo >= hi) {
         return;
@@ -1085,8 +1149,29 @@ private void quickSort(int[] arr, int lo, int hi) {
         }
     }
     // 区间分界点是r
-    quickSort(arr, lo, r);
-    quickSort(arr, r + 1, hi);
+    quickSort(arr, lo, r); // 区间[lo, r]
+    quickSort(arr, r + 1, hi); // 区间[r + 1, hi]
+}
+
+// 三路划分版本：适合重复元素多的场景
+private void quickSort(int[] arr, int lo, int hi) {
+    if (lo >= hi) {
+        return;
+    }
+    int l = lo, i = lo, r = hi;
+    int x = arr[lo];
+    while (i <= r) {
+        if (arr[i] < x) {
+            swap(arr, l++, i++);
+        } else if (arr[i] > x) {
+            swap(arr, i, r--);
+        } else {
+            i++;
+        }
+    }
+    quickSort(arr, lo, l - 1); // 小于基准的区间[lo, l - 1]
+    quickSort(arr, r + 1, hi); // 大于基准的区间[r + 1, hi]
+    // 等于基准的区间[l, r]
 }
 ```
 
