@@ -39,10 +39,15 @@ public class Main {
 需要抛出 `IOException` 异常；
 
 - `readLine()`方法读取一行；
-- `split("\\s+")`以一个或多个空白字符分割；
+- `split("\\s+")`以**一个或多个空白字符**分割；
+  - 注意：`split`方法的参数是**正则表达式**
+    - 正则里像 `.`, `*`, `+`, `?`, `|`, `[`，`]`, `(`,`)`, `{`, `}`, `^`, `$`, `\` 本身 等都有特别的意义，如果想把它们当普通字符做分隔符，需要加上`\\`
+
   - `\s`在正则表达式里表示空白字符：包括空格、制表符、换页符
   - `+`表示匹配一个或多个
   - 前面多一个`\`其实就是转义字符，为了Java能知道这是正则表达式，让字符串字面量真正包含一个 `\`
+
+- `split(\\.)`以**点**`.` 来分割
 - `trim()`方法消除前后多余的空格；
 
 ```java
@@ -126,7 +131,7 @@ class Solution {
 
 https://leetcode.cn/problems/repeated-dna-sequences/
 
-记几个大质数：**`110503`, `9369319`**
+记几个大质数：`110503`, `9369319`, `1_000_000_007L`
 
 题目：
 
@@ -318,6 +323,72 @@ public long quickPow(long num, long pow, long mod) {
         pow >>= 1; // 也就是 pow /= 2;
     }
     return ans;
+}
+```
+
+
+
+### 质数筛
+
+记个`O(nloglogn)`版本，有`O(n)`版本，但是没那么好记，实际上不会差距很多吧
+
+```java
+/**
+ * 使用埃拉托斯特尼筛法求出不超过 n 的所有质数
+ * 时间复杂度：O(n log log n)，空间复杂度：O(n)
+ */
+public void sieveOfEratosthenes(int n) {
+    if (n < 2) {
+        return; // 没有注释
+    }
+
+    boolean[] isPrime = new boolean[n + 1];
+    Arrays.fill(isPrime, true);
+    isPrime[0] = isPrime[1] = false; // 0 和 1 不是质数
+
+    // 只需筛选到 sqrt(n)
+    for (int p = 2; p * p <= n; p++) {
+        if (isPrime[p]) {
+            // 从 p*p 开始，将 p 的所有倍数标记为非质数
+            for (int multiple = p * p; multiple <= n; multiple += p) {
+                isPrime[multiple] = false;
+            }
+        }
+    }
+}
+```
+
+
+
+### 最大公约数和最小公倍数
+
+最大公约数GCD用**辗转相除法**，最小公倍数LCM是2个数相乘再除以最大公约数
+
+```java
+/**
+ * 最大公约数
+ * 2个参数都需要是正整数
+ */
+private int gcd(int a, int b) {
+    if (a == 0) return b;
+    if (b == 0) return a;
+    // 辗转相除
+    while (b != 0) {
+        int mod = a % b;
+        a = b;
+        b = mod;
+    }
+    return a;
+}
+
+/**
+ * 最小公倍数
+ * 2个参数都需要是正整数
+ */
+private int lcm(int a, int b) {
+    int gcd = gcd(a, b);
+    if (gcd == 0) return 0;
+    return a / gcd * b; // a * b / gcd，为了防止乘法溢出，这里先除后乘
 }
 ```
 
@@ -1120,6 +1191,21 @@ class LRUCache extends LinkedHashMap<Integer, Integer>{
 
 
 ## 排序
+
+| 排序算法                  | 平均时间复杂度 | 最坏时间复杂度 | 空间复杂度 | 最坏情况输入类型                                             | 是否稳定 |
+| ------------------------- | -------------- | -------------- | ---------- | ------------------------------------------------------------ | -------- |
+| 冒泡排序 (Bubble Sort)    | O(n²)          | O(n²)          | O(1)       | 完全逆序或几乎逆序                                           | **是**   |
+| 选择排序 (Selection Sort) | O(n²)          | O(n²)          | O(1)       | 任意输入（因为每次都要遍历未排序部分）                       | 否       |
+| 插入排序 (Insertion Sort) | O(n²)          | O(n²)          | O(1)       | 完全逆序                                                     | **是**   |
+| 归并排序 (Merge Sort)     | O(n log n)     | O(n log n)     | O(n)       | 任意输入（在所有输入情况下都是这个时间复杂度）               | **是**   |
+| 堆排序 (Heap Sort)        | O(n log n)     | O(n log n)     | O(1)       | 任意输入（在所有输入情况下都是这个时间复杂度）               | 否       |
+| 快速排序 (Quick Sort)     | O(n log n)     | O(n²)          | O(1)       | 当每次 partition 极度不平衡，比如每次选到最小／最大元素做 pivot ;或输入已排序／逆序 | 否       |
+| 希尔排序 (Shell Sort)     | O(n log n)     | O(n²)          | O(1)       | 与步长序列相关的特定排列，会导致每次插入排序都需要大量移动元素 | 否       |
+| 计数排序 (Counting Sort)  | O(n + k)       | O(n + k)       | O(k)       | k 是键的取值范围；如果 k 很大影响性能                        | **是**   |
+| 基数排序 (Radix Sort)     | O(n · k)       | O(n · k)       | O(n + k)   | k 是位数或 “digit” 数量；若 k 很大则开销大                   | **是**   |
+| 桶排序 (Bucket Sort)      | O(n + k)       | O(n²)          | O(n + k)   | 数据分布极端不均匀，比如大部分元素落在一个桶里               | **是**   |
+
+
 
 ### 快速排序模板
 
@@ -2331,8 +2417,6 @@ class Solution {
     }
 }
 ```
-
-
 
 
 

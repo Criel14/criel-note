@@ -174,23 +174,24 @@ int main() {
 
 ```mermaid
 graph TD
-    A[epoll_create] --> B[epoll_ctl ADD listen_fd]
-    B --> C[内核检测事件]
-    C --> D[epoll_wait 被调用]
+    A[epoll_create 创建epoll实例] --> B[epoll_ctl ADD listen_fd 添加感兴趣事件：监听事件]
+    B --> C[内核检测事件的发生]
+    C --> C1["内核log(n)搜索红黑树，将对应的fd放入就绪链表"]
+    C1 --> D[epoll_wait 获取就绪链表中的fd]
     D --> E{fd 是 listen_fd?}
-    E -- 是 --> F[accept 获取 client_fd]
-    F --> G[epoll_ctl ADD client_fd]
-    E -- 否 --> H[处理 client_fd 的 I/O]
+    E -- 是 --> F[accept 在新的连接中获取 client_fd]
+    F --> G[epoll_ctl ADD client_fd 添加感兴趣事件：指定客户端连接的消息]
+    E -- 否 --> H[说明是指定客户端连接的消息，则处理 client_fd 的 I/O]
     G --> H
     H --> D
 ```
 
-### 水平触发与边缘触发
+#### 水平触发与边缘触发
 
 epoll 支持两种事件触发模式，分别是边缘触发（edge-triggered，ET）和水平触发（level-triggered，LT）
 
 - 边缘触发
-  - 仅在文件描述符的状态发生变化时（如从不可读变为可读）才通知应用程序。每个事件仅通知一次，应用程序必须在通知时尽可能多地处理数据，否则可能错过后续通知；
+  - 仅在文件描述符fd的状态发生变化时（如从不可读变为可读）才通知应用程序。每个事件仅通知一次，应用程序必须在通知时尽可能多地处理数据，否则可能错过后续通知；
     - 也就是就绪链表里从无fd到有fd时，会通知一次，如果没处理，新的fd加入时不会再通知
   - 适合**高并发场景**；
 - 水平触发
@@ -548,7 +549,8 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
   - ![](image/redis-布隆过滤器.png)
   - 请求经过过滤器，先做那几个hash，如果位置全为1，就是存在，否则则不通过
   - 有可能哈希冲突，存在误判的可能，误判率与数组的大小、哈希算法等有关；增加数组大小以减少误判率则会以内存消耗为代价
-  - **特点**：相比缓存空数据，内存占用少；但是存在误判
+  - **优点**：相比缓存空数据，内存占用少；本身时间复杂度也很低；
+  - **缺点**：可能存在误判；不支持删除；
 
 
 
@@ -590,7 +592,9 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
 
 
 
-## 双写一致性
+## 一致性问题
+
+### 数据库 + redis
 
 **定义：**
 
@@ -621,10 +625,179 @@ Redis 后续版本又支持四种数据类型，它们的应用场景如下：
   - ![](image/redis-双写一致性-MQ.png)
 
 - Canal异步通知
-  - Canal是阿里的一个中间件，伪装成slave数据库，获取BinLog，将数据的变更情况通知缓存，然后更新缓存
+  - Canal`/kəˈnæl/`是阿里的一个开源框架，伪装成slave数据库，获取BinLog，将数据的变更情况通知缓存，然后更新缓存
   - ![](image/redis-双写一致性-Canal.png)
   - 特点：
     - 几乎没有代码侵入，中间件直接搞定
+
+
+
+### 多级缓存
+
+除了redis，我们可能还会加上本地缓存 Caffeine`ˈ\kæfi:n\` 作为一级缓存；
+
+构成了这样的结构：`Caffeine(L1) → Redis(L2) → mysql`，其中本地缓存中的数据的TTL通常会比redis中的数据的TTL小；
+
+对于这样的场景，有现成的框架 **XXL-CACHE** 可以使用：
+
+- 基本介绍
+
+  - XXL-CACHE 是一个**多级缓存框架**，高效组合本地缓存和分布式缓存(Redis+Caffeine)，支持“多级缓存、一致性保障、TTL、Category隔离、防穿透”等能力；拥有“高性能、高扩展、灵活易用”等特性，提供高性能多级缓存解决方案；
+
+- 基本使用
+
+  - 引入依赖
+
+  - 配置其连接redis
+
+  - ```java
+    String category = "user";
+    long survivalTime = 60 * 1000;
+    String key = "user03";
+    
+    // 1、定义缓存对象，并指定 “缓存category + 过期时间”
+    XxlCacheHelper.XxlCache userCache = XxlCacheHelper.getCache(category, survivalTime);
+    
+    // 2、缓存写：按照 L1 -> L2 顺序依次写缓存，同时借助内部广播机制更新全局L1节点缓存；
+    userCache.set(key, value);
+    
+    // 3、缓存读：按照 L1 -> L2 顺序依次读取缓存，如果L1存在缓存则返回，否则读取L2缓存并同步L1；
+    userCache.get(key);
+    
+    // 4、缓存删：按照 L1 -> L2 顺序依次删缓存，同时借助内部广播机制更新全局L1节点缓存；
+    userCache.del(key);
+    ```
+
+>  看上去非常智能
+
+- 内置**布隆过滤器**防止缓存穿透
+
+  - 直接配置即可启用
+
+  - ```properties
+    # 开启布隆过滤器
+    xxl.cache.bloomfilter.enable=true
+    # 布隆过滤器容量
+    xxl.cache.bloomfilter.capacity=1000000
+    # 误判率
+    xxl.cache.bloomfilter.fpp=0.03
+    ```
+
+- 内置**互斥锁**防止缓存击穿
+  
+  - 多级缓存的架构本身能有效减少缓存击穿；
+  - 当本地缓存未命中时，查询Redis，若Redis命中则写入本地缓存并返回；
+  - 若Redis未命中，则自动获取一个Redis分布式锁，之后
+    - 执行数据库查询逻辑（用户自己编写，示例代码在下面给出）
+    - 写入Redis
+    - 写入本地缓存
+    - 释放锁
+  
+  
+  - 锁会阻塞对相同key的**读和写**操作，是互斥锁；
+  
+  - 只有一个线程能进入**数据库查询逻辑**，其他线程会等待
+  
+  - ```java
+    // 查询逻辑可以自己编写，获取锁后自动执行下面的逻辑
+    public class UserCacheLoader implements CacheLoader<String, User> {
+        @Autowired
+        private UserDao userDao;
+        
+        @Override
+        public User load(String userId) throws Exception {
+            // 从数据库加载数据
+            return userDao.findUserById(userId);
+        }
+    }
+    
+    // 在配置中注册
+    @Bean
+    public Cache<String, User> userCache() {
+        return cacheManager.createCache("userCache", 
+            String.class, 
+            User.class, 
+            new UserCacheLoader(),
+            60, // TTL: 60秒
+            30  // 最大空闲时间: 30秒
+        );
+    }
+    ```
+  
+- 内置随机TTL防止缓存雪崩
+
+  - 多级缓存的架构本身能有效减少缓存雪崩
+  - 框架会自动在配置的TTL基础上添加随机值，避免大量缓存同时过期
+
+- 分布式下不同节点的本地缓存同步问题
+
+  - 框架使用 **Redis Pub/Sub** 机制（发布订阅机制），并结合客户端主动失效机制，实现 L1（本地缓存）与 L2（分布式缓存）、以及不同节点之间的 **缓存数据一致性同步**；
+  - 当一个节点更新或删除缓存时，其他节点会接收到广播通知，从而同步失效本地缓存；
+
+
+> 如果想用消息队列实现不同节点的缓存一致性，我们需要为每个节点都发送一条消息，似乎没有广播这样的功能；
+>
+> 但是Redis Pub/Sub 只是实时广播内存消息，**不做持久化**，也没有消息留存，这是需要使用消息队列的理由之一；
+
+
+
+## 热点key问题
+
+**热点key**：某个key访问量特别高，导致对这个key的访问大量占用Redis服务器资源，导致服务器宕机；
+
+**带来的问题**：
+
+- CPU过载：都去处理热点key，导致处理其他请求的能力下降；
+- 负载不均衡：流量集中在某几个节点上，影响集群总体性能；
+- 缓存击穿：如果没做处理，击穿后危险很大；
+
+**检测热点key**：
+
+- 抓包分析
+- 用`redis-cli --hotkeys` 命令（Redis ≥4.0.3）
+- redis慢日志
+
+**解决方案**：
+
+- 读写分离
+  - 多个从节点做读操作，降低压力；
+
+- 分片集群
+  - 如果有多个热点key，可以用分片让它们分散；
+  - 但如果只有1个热点key，就没有办法了；
+
+- **拆分key**
+  - 将一个热点 Key 拆分成多个逻辑子 Key（例如 `hotkey:0`, `hotkey:1`, … `hotkey:N`），访问时随机选择/哈希映射其中一个，通过分散访问来缓解单节点压力；
+- **多级缓存**
+  - 加一层本地缓存，不过不太适合分布式架构；
+- 限流降级
+  - 漏桶算法等；
+
+- 读写分离
+  - 适合读多写少的场景；
+
+### 拆分key实例
+
+电商平台`1001`号商品的库存在Redis中：
+
+```
+KEY: product:1001:stock
+VALUE: 1000 (总库存)
+```
+
+拆成10个分片：
+
+```
+product:1001:stock:0 → 100
+product:1001:stock:1 → 100
+product:1001:stock:2 → 100
+...
+product:1001:stock:9 → 100
+```
+
+对用户ID做Hash，让用户分散到多个分片中；
+
+重试机制：如果用户对应的分片库存为0，则需要遍历其他所有分片；
 
 
 
@@ -907,28 +1080,6 @@ try {
 
 
 
-## 热点key问题
-
-检测热点key：抓包，或者用`redis-cli --hotkeys` 命令（Redis ≥4.0.3）
-
-解决：
-
-- 分片集群
-  - 如果有多个热点key，可以用分片让它们分散
-  - 但如果只有1个热点key，就没有办法了
-
-- 拆分key
-  - 将一个热点 Key 拆分成多个逻辑子 Key（例如 `hotkey:0`, `hotkey:1`, … `hotkey:N`），访问时随机选择其中一个，通过分散访问来缓解单节点压力
-- 多级缓存
-  - 加一层本地缓存，不过不适合分布式架构
-- 限流降级
-  - 漏桶算法等
-
-- 读写分离
-  - 适合读多写少的场景
-
-
-
 ## 单线程但速度快的原因
 
 tip：真正影响性能的是IO，redis这里一般就是指**网络IO**；
@@ -976,28 +1127,60 @@ io-threads-do-reads yes
 
 ### SQL执行流程
 
+主要是：解析 → 优化 → 执行 → 返回
+
 大致执行流程如下：
 
 ```mermaid
 flowchart TD
-    A["客户端发送 SQL 请求"]
-    B["服务器接收命令与连接认证"]
-    C["解析 SQL → AST"]
-    D["预处理与语义检查"]
-    E["优化器生成执行计划"]
-    F["执行器调度存储引擎 (handler)"]
-    G>"存储引擎：Buffer Pool / MVCC / 索引访问 / undo"]
-    H{"是否需要中间处理？"}
-    I["排序 / 聚合 / 临时表 / filesort"]
-    J["事务提交：Redo Log / Binlog / Group-commit"]
-    K["封装结果集并通过协议返回客户端"]
-    L["清理临时对象 + 更新统计 / 后台 purge 等"]
+    A[客户端发送SQL请求] --> B[连接器<br>管理连接/权限验证]
+    B --> C{查询缓存<br>（MySQL 8.0+ 已移除）}
+    C -->|MySQL 5.7 及以前| D["【解析器】<br>词法分析/语法分析"]
+    C -->|MySQL 8.0+| D
+    D --> E["【预处理器】<br>检查表/列是否存在"]
+    E --> F["【优化器】<br>生成最优执行计划"]
+    F --> G["【执行器】<br>按照执行计划调用存储引擎接口"]
     
-    A --> B --> C --> D --> E --> F --> G --> H
-    H -- 是 --> I --> J
-    H -- 否 --> J
-    J --> K --> L
+    G --> H
+    
+    subgraph H [存储引擎层]
+        direction LR
+        I[InnoDB] --> J[MyISAM]
+        J --> K[Memory]
+        K --> L[其他引擎...]
+    end
+    
+    H --> M[存储引擎执行<br>数据读写操作]
+    M --> N[返回数据给执行器]
+    N --> O[执行器处理结果]
+    O --> P[返回最终结果给客户端]
+    
+    %% 添加注释框
+    Q[服务层：理解SQL语义<br>存储引擎层：执行底层操作]:::noteStyle
+```
 
+包含**聚合操作**等逻辑的执行流程：
+
+```mermaid
+flowchart TD
+    A["SELECT department, AVG(salary) FROM employees<br>WHERE age > 30 AND salary > 5000<br>GROUP BY department HAVING AVG(salary) > 10000"] --> B[解析器]
+    B --> C[优化器]
+    C --> D[执行器]
+    
+    D --> E[调用存储引擎：<br>读取employees表数据]
+    E --> F[存储引擎层<br>逐行返回数据]
+    F --> G{服务层：WHERE过滤<br>检查 age > 30 AND salary > 5000}
+    G -->|条件满足| H[服务层：GROUP BY 分组]
+    G -->|条件不满足| I[丢弃该行]
+    I --> F
+    
+    H --> J[服务层：聚合计算<br>AVG, COUNT, SUM等]
+    J --> K["服务层：HAVING过滤<br>检查 AVG(salary) > 10000"]
+    K -->|满足| L[返回最终结果]
+    K -->|不满足| M[过滤掉该分组]
+    M --> F
+    
+    L --> N[客户端]
 ```
 
 
@@ -1874,22 +2057,82 @@ COMMIT;
 
 
 
-## 主从同步
+## 主从
 
-### binlog 和 relaylog
+### 主从同步
+
+#### binlog 和 relaylog
 
 binlog：
 
-- 二进制日志 `BINLOG` 记录了所有的 **DDL** (数据定义语言) 语句 和 **DML** (数据操纵语言) 语句，但不包括数据**查询**(SELECT、SHOW)语句。
+- 二进制日志 `BINLOG` 记录了所有的 **DDL** (数据定义语言) 语句 和 **DML** (数据操纵语言) 语句，但不包括数据**查询**(SELECT、SHOW)语句
+  - 可以理解为记录了**数据的变化**，不是单纯的sql语句，不然例如”当前时间“等数据会不一致；
 - binlog是server层的，不依赖存储引擎
 
-### 同步过程
+#### 同步过程
 
 1. Master 主库在事务提交时，会把数据变更记录在**二进制日志文件 Binlog** 中
 2. 从库读取主库的二进制日志文件 Binlog ，写入到从库的**中继日志 Relay Log**
 3. slave重做中继日志中的事件，将改变反映它自己的数据。
 
 ![](image/mysql-主从同步过程.png)
+
+### 从库选举
+
+MySQL默认的主从复制架构**本身并不提供自动检测主库宕机的功能**。默认MySQL复制是异步的，且不提供任何形式的领导者选举机制；即**标准MySQL复制不包含自动的从库选举过程**。当主库故障时，系统不会自动选择新的主库；
+
+因此集群的健康情况和从库的选举都需要借助**外部工具**，例如去修改mysql的配置；
+
+常用工具：MHA (Master High Availability)、Orchestrator、ProxySQL、ClusterControl 等
+
+选举策略：
+
+- **GTID模式**
+
+  - 每个事务被分配一个全局唯一的GTID
+
+  - 格式：`3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5`
+    - 前半部分是服务器UUID
+    - 后半部分是事务序列号
+
+  - 从库记录已执行的GTID集合(`Executed_Gtid_Set`)
+
+  - 主库向从库发送事务时包含GTID
+
+  - 从库通过GTID自动确认是否已执行该事务
+
+- **传统模式**
+
+  - 通过binlog文件名和位置来跟踪复制进度
+
+  - 主库binlog位置：`File`和`Position`
+    - 从库记录：
+      - 已读取位置(`Master_Log_File`, `Read_Master_Log_Pos`)
+      - 已执行位置(`Relay_Master_Log_File`, `Exec_Master_Log_Pos`)
+
+  - 需要精确匹配这些位置值来确保复制连续性
+
+GTID模式更**直接简单**
+
+
+
+### binlog丢失
+
+- 选择一个从库，从库的relay log格式和binlog是一样的，MySQL可以直接解析导出binlog；
+
+- 更直接的：把某个最完整的从库提升为新主；
+  - 需要先停止应用写入并把旧主隔离；
+- 从最近的数据备份；
+
+实在不行，用一台独立的服务器，每隔一小时拉取数据库的数据，这样最多就丢失一小时，就算主从全挂了也是丢失一小时；除非这台服务器也挂了...
+
+
+
+### 从库数量
+
+从库数量不宜过多，过多会提高网络IO的压力，建议3-5个；
+
+可以选择**局域网**，即主从在同一个机房里，这样**网络带宽压力小**；
 
 
 
@@ -2481,6 +2724,27 @@ public class ServiceB {
 
 
 
+### Spring检测循环依赖
+
+当 Spring 开始创建一个单例 Bean 时，会把它标记为 “正在创建中”（当前 bean 正在 creation）;
+
+> 配置开启”允许循环依赖“后，Spring才允许用三级缓存解决循环依赖：
+
+**检测循环依赖**：
+
+当容器 `getBean(beanName)` 要创建一个单例 Bean 时，在创建前，会先调用 `beforeSingletonCreation(beanName)` 给这个 bean 打一个“**正在创建中**（in creation）”的标识。Spring 会把 beanName 加入一个集合 `singletonsCurrentlyInCreation`。如果这个 beanName 已经在集合里了，说明这是一个循环依赖（又要创建自己自己正在创建的 Bean），于是抛异常。
+
+**允许循环依赖时：**
+
+如果 `Bean A` 在注入阶段依赖 `Bean B`，而 `Bean B` 又反过来依赖 `Bean A`，就在 `getBean(“A”)`／`getBean(“B”)` 的过程里，Spring 会看到 `Bean A` 是“正在创建中”，于是尝试从 二级／三级缓存取 `Bean A` 的早期引用：
+
+- 如果能取到，就注入，不报错；
+- 如果不能（或不支持这个情况，如构造器注入），就抛 `BeanCurrentlyInCreationException`，报循环依赖；
+
+
+
+
+
 ## SpringMVC 执行流程
 
 - **视图阶段**
@@ -2508,7 +2772,7 @@ public class ServiceB {
 
 
 
-## Springboot自动配置原理
+## Springboot自动配置
 
 **总结：**
 
@@ -2537,9 +2801,23 @@ public class ServiceB {
       - 调用 `getCandidateConfigurations()` 方法，通过调用 **SpringFactoriesLoader** 加载所有 jar 包中 `META-INF/spring.factories` 文件下以 `org.springframework.boot.autoconfigure.EnableAutoConfiguration` 为 key 的值。这些值就是候选的自动配置类列表。
     - **条件筛选**（条件注解）
       - 对候选的自动配置类会依次应用各类**条件注解**（如 `@ConditionalOnClass`、`@ConditionalOnMissingBean`、`@ConditionalOnProperty` 等）。只有在所有条件均满足的情况下，该配置类才会被最终导入。
+      
+      - ```java
+        // 以RocketMQ的源码为例
+        @Bean({"defaultLitePullConsumer"})
+        @ConditionalOnMissingBean({DefaultLitePullConsumer.class}) // 不存在这个Bean才可以
+        @ConditionalOnProperty( // 只有配置了这些项才可以
+            prefix = "rocketmq",
+            value = {"name-server", "pull-consumer.group", "pull-consumer.topic"}
+        )
+        public DefaultLitePullConsumer defaultLitePullConsumer(
+            RocketMQProperties rocketMQProperties) throws MQClientException {
+            ...
+        }
+        ```
     - **返回最终配置列表**
       - 最终符合条件的自动配置类的全限定名数组会被返回，并由 Spring 容器在刷新时加载进来。
-
+  
 - **`SpringFactoriesLoader `** （Spring工厂加载器）
   - 自动配置类的信息存放在各个依赖的 jar 包中的 `META-INF/spring.factories` 文件中（spring 2.x）。文件格式为标准的 Properties 格式，其中 key 为接口或抽象类的全限定名（这里为 `org.springframework.boot.autoconfigure.EnableAutoConfiguration`），value 为以逗号分隔的自动配置类全限定名列表。
   - **SpringFactoriesLoader** 会扫描类路径下所有 jar 包的 `META-INF/spring.factories` 文件，并将所有匹配 key 的值合并后返回。这一机制使得各个 Starter 模块都可以轻松地将自己的自动配置类注册到 Spring Boot 的自动配置体系中。
@@ -2558,7 +2836,7 @@ public class ServiceB {
 
 
 
-## 自动配置类加载文件
+### 自动配置类加载文件
 
 - **Spring Boot 2.x 及以前**
   -  自动配置类的信息存放在 `META-INF/spring.factories` 文件中。
@@ -2612,6 +2890,38 @@ com.example.autoconfig.OtherAutoConfiguration
    现代应用往往采用微服务架构，而 Spring Boot 无论是在独立部署、容器化部署上，还是与 Spring Cloud 配合时，都能很好地满足微服务需要。简洁的配置和快速响应使得每个服务独立可控，同时便于集成服务注册与发现、配置中心等组件。
 - **社区和生态系统**
    Spring Boot 拥有庞大的社区支持和丰富的第三方集成方案，文档和示例非常丰富，遇到问题时可以快速获得社区的帮助和解决方案。这对于面试中展示自己对新技术快速上手和问题解决能力也能起到加分作用。
+
+
+
+## Springboot启动流程
+
+```
+[main 方法]  
+    ↓  
+SpringApplication.run(...)  
+    ↓  
+准备环境（Environment） ──> 加载配置文件 + Profile + 系统变量  
+    ↓  
+触发 Listener / Initializer（事件通知）  
+    ↓  
+创建 ApplicationContext（Spring 容器）  
+    ↓
+加载 / 注册 Bean 定义（扫描 @Component / 自动配置 @EnableAutoConfiguration）  
+    ↓ 
+刷新容器（refresh）：  
+   ├─ 执行 BeanFactoryPostProcessor  
+   ├─ 注册 BeanPostProcessor  
+   ├─ 实例化普通 Bean（构造 + 注入）  
+   ├─ 初始化生命周期回调（@PostConstruct / InitializingBean / setXXXAware 等）  
+    ↓ 
+如果是 Web 应用 → 启动嵌入式服务器（Tomcat/Jetty 等），注册 DispatcherServlet 等  
+    ↓ 
+执行 ApplicationRunner / CommandLineRunner 等启动后回调  
+    ↓
+发布 “启动完成” 事件（ApplicationReadyEvent）  
+    ↓
+Spring Boot 应用 Ready，可以接受请求 / 提供服务  
+```
 
 
 
@@ -2713,7 +3023,9 @@ com.example.autoconfig.OtherAutoConfiguration
 
 - **Spring 核心注解** 主要关注**对象管理**、**依赖注入**和**配置**。
 - **Spring MVC 注解** 专注于**Web 层请求处理**。
-- **Spring Boot 注解** 则主要用于**快速启动与自动配置**整个应用，整合 Spring 生态。
+- **Spring Boot 注解** 则主要用于**快速启动与自动配置**整个应用，整合 Spring 生态，同时内嵌Tomcat服务器。
+
+如果不用 Spring Boot，只使用纯粹的 Spring MVC，确实需要手动编写大量的 XML 配置文件，并且需要一个外部的、独立的 Tomcat 服务器（或其他 Servlet 容器）来部署应用。
 
 
 
@@ -3100,7 +3412,7 @@ mybatis支持延迟加载，但**默认没有开启**
   - Nacos支持服务端主动检测提供者状态
   - 临时实例采用心跳模式，非临时实例采用主动检测模式临时实例心跳不正常会被剔除，非临时实例则不会被剔除
   - Nacos支持服务列表变更的消息推送模式，服务列表更新更及时
-  - Nacos集群默认采用AP方式，当集群中存在非临时实例时，采用CP模式;Eureka采用AP方式
+  - Nacos集群默认采用AP方式，当集群中存在非临时实例时，采用CP模式；Eureka采用AP方式
   - Nacos还**支持了配置中心**，eureka则只有注册中心，也是选择使用nacos的一个重要原因
 
 
@@ -3526,9 +3838,9 @@ fos.close();
 
 ## NIO
 
-- 传统的 Java I/O（BIO）是基于流的阻塞模型，读写时会阻塞线程，若并发大量连接容易导致线程资源瓶颈。
+- 传统的 Java I/O（BIO）是基于流的阻塞模型，**读写时会阻塞线程**，若并发大量连接容易导致线程资源瓶颈；
 
-- NIO 支持**同步非阻塞** I/O：线程可以发起读/写操作后立即返回去执行其他任务，一旦数据准备好再继续处理，从而提升效率和响应性
+- NIO 支持同步非阻塞 I/O：**线程可以发起读/写操作后立即返回去执行其他任务**，一旦数据准备好再继续处理，从而提升效率和响应性；
 
 ### 零拷贝
 
@@ -3594,9 +3906,11 @@ System.out.println(upperWords); // 输出: [APPLE, BANANA, CHERRY]
 
 
 
-## JDK9字符串
+## 字符串
 
-底层把原来jdk8的`char`数组，换成了`byte`数组；
+### 字符串底层存储
+
+java9的底层把原来java8的`char`数组，换成了`byte`数组；
 
 - **纯**英文字符串：节省空间
 
@@ -3634,6 +3948,22 @@ byte coder() {
     return COMPACT_STRINGS ? coder : UTF16;
 }
 ```
+
+### 字符串对象创建
+
+- `String s = new String("abc");` 创建几个对象？
+  - 如果常量池中不存在"abc"，创建**2个**对象（常量池对象 + 新的字符串对象s）
+  - 如果常量池中已存在"abc"，创建**1个**新对象（新的字符串对象s）
+
+- `String s = "abc";` 创建几个对象？
+  - 如果常量池中不存在"abc"，创建**1个**对象（放入常量池）
+  - 如果常量池中已存在"abc"，**不创建**新对象（s直接引用已有对象）
+- `String s = "a" + "b" + "c";` 创建几个对象？
+  - 编译器会进行优化，直接将"a"+"b"+"c"合并为"abc"
+  - 只创建**1个**String对象（在常量池中）
+- `String s1 = "abc"; String s2 = "abc";` 创建几个对象？
+  - 仅创建**1个**对象（s1和s2都指向常量池中同一个"abc"对象）
+  - 这体现了字符串常量池的"享元模式"设计 
 
 
 
@@ -5062,7 +5392,7 @@ Lock与synchronized：
 
 
 
-### 死锁的产生与诊断
+### 死锁
 
 开发中可能产生死锁的情况：
 
@@ -5092,7 +5422,7 @@ Lock与synchronized：
   - 同样是JDK自带的监控工具（在JDK的安装目录下），提供了线程分析、内存泄漏检测等功能。在VisualVM中，也可以检查线程状态和死锁信息。
 - **jps + jstack**
   - 命令行工具，可以输出Java进程中所有线程的堆栈信息，分析线程之间的锁持有情况，快速定位死锁。使用方法示例：
-    - `jsp`命令获取线程的id，`jstack -l <id>`得到日志，翻到最后面
+    - `jps`命令获取线程的id，`jstack -l <id>`得到日志，翻到最后面
   - ![](image/并发编程-死锁诊断-jps-jstack.png)
 
 **死锁避免：**
@@ -5105,6 +5435,16 @@ Lock与synchronized：
   - 定期检测系统中是否存在死锁，一旦发现，采取措施（如撤销或重启部分线程/事务）解除死锁。
 - **设计简化资源依赖**
   - 尽量减少嵌套锁和资源之间的复杂依赖关系，让每个线程尽可能短时间内完成操作并释放资源。
+
+#### Java如何检测死锁
+
+`jstack`命令可以检查出锁，底层是这样的：
+
+若存在线程与资源的“等待图”，形成一个**环**，这些线程就互相等待、永远不能继续。
+
+程序会收集每个线程的 stack trace + 状态（RUNNABLE / BLOCKED / WAITING 等） + 所持锁 + 当前正在等待哪个锁或 monitor（如果有的话）由此构建一个图；
+
+- 例如线程`A`等待锁`L1`，而线程`B`当前持有锁`L2`，则图中有一条 `A → B` 的；
 
 
 
@@ -6017,7 +6357,9 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
-### 常量池与运行时常量池
+### 补充：常量池与运行时常量池
+
+>  运行时常量池在**方法区**中
 
 **常量池**
 
@@ -6153,6 +6495,19 @@ public abstract class ClassLoader {
 - **防止核心 API 被篡改**
   - 由于先用父加载器加载，再用子加载器加载，所以每次向上委派，**核心类**总是会由 `BootstrapClassLoader` 加载，加载后子加载器就不会加载了
 
+#### 打破双亲委派
+
+在Tomcat中，一个 Tomcat 进程托管多个应用：
+
+- 有一个**预先安装好的**、独立运行的 Tomcat 服务器；
+- 将应用程序打包成 **WAR 文件**，然后将其复制到 Tomcat 的 `webapps` 目录下；
+- 只需要**启动一个 Tomcat 进程**，这个 Tomcat 进程启动**一个 JVM**。然后，Tomcat 会监视 `webapps` 目录，**自动将其中的多个 WAR 应用解压、加载并托管在同一个 JVM 进程中**；
+  - 例如将 `AppA.war` 和 `AppB.war` 都扔进 `webapps` 文件夹；
+  - JVM -> **独立 Tomcat** -> `AppA` (由 `WebappClassLoaderA` 加载) + `AppB` (由 `WebappClassLoaderB` 加载)
+- 为了实现应用隔离、类库独立性和热部署，Tomcat **必须打破双亲委派**，为每个应用创建独立的类加载器；
+
+Tomcat的类加载器`WebappClassLoader`会**首先自己尝试**从本应用的 `/WEB-INF/classes` 和 `/WEB-INF/lib/*.jar` 中查找并加载这个类，找不到才会委派给父加载器
+
 
 
 ### 类加载过程
@@ -6180,7 +6535,8 @@ public abstract class ClassLoader {
    - 简单来说就是验证：**文件格式 + 元数据 + 字节码 + 符号引用**
    - 验证class文件的语法、字节码等文件格式
    - 验证常量池里引用的类是否存在
-
+   - tip：`java.lang.Class` 对象是垃圾回收管理的根对象之一。如果验证失败，这个Class对象不再被任何地方引用，下次GC时就会被清理掉。同样，在元空间中存储的失败类的元数据，在对应ClassLoader被回收时，整个元空间区域都可以被整体释放
+   
 2. **准备**
    - 为类变量（`static`变量）分配内存（**注意是堆内存**），并设置类变量初始值
      - `static final`: 基本类型以及字符串常量，值已确定，赋值在**准备阶段**完成
@@ -6272,9 +6628,9 @@ public abstract class ClassLoader {
 
 或称为“**空间分配担保**”；
 
-发生 Minor GC，在晋升到老年代时，老年代可能没有足够的连续空间容纳晋升的对象；该机制就是为了确保在 Minor GC 之前老年代本身还有容纳新生代所有对象的剩余空间；
+发生 **Minor GC**，在晋升到老年代时，老年代可能没有足够的连续空间容纳晋升的对象；该机制就是为了确保在 Minor GC 之前老年代本身还有容纳新生代所有对象的剩余空间；
 
-采取的策略是：只要老年代的连续空间大于新生代对象总大小或者历次晋升的平均大小，就会进行 **Minor GC**，否则将进行 **Full GC**;
+采取的策略是：只要老年代的连续空间 > 新生代对象总大小 或者 历次晋升的平均大小，就会进行 **Minor GC**，否则将进行 **Full GC**;
 
 
 
@@ -6333,13 +6689,14 @@ public abstract class ClassLoader {
       - **标记整理算法**
   - 垃圾回收时，多线程工作，并且java应用中的所有线程都要暂停(STW)，等待垃圾回收的完成;
   - ![](image/jvm-垃圾回收-并行垃圾回收器.png)
-- **CMS 垃圾收集器（并发标记清除）**
-  - Concurrent Mark Sweep 是一款以获取最短回收停顿时间为目标的收集器，停顿时间短，用户体验就好。其最大特点是**在进行垃圾回收时，应用仍然能正常运行**。
+- **CMS 垃圾收集器（Concurrent Mark Sweep 并发标记清除）**
+  
+  - CMS 是一款以获取最短回收停顿时间为目标的收集器，停顿时间短，用户体验就好。其最大特点是**在进行垃圾回收时，应用仍然能正常运行**。
   - 用于**老年代**，新生代通常搭配 **Parallel New** 收集器
   - 使用**标记-清除**算法
-    - 初始标记： 短暂停顿，标记直接与 root 相连的对象（根对象）➡️ 第1次 STW
+    - 初始标记： 短暂停顿，标记直接与 root 相连的对象（根对象）➡️ **第1次 STW**
     - 并发标记： 用一个闭包结构去记录可达对象;
-    - 重新标记**：** 重新标记阶段就是为了修正并发标记期间因为用户程序继续运行而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段的时间稍长，远远比并发标记阶段时间短； ➡️ 第2次 STW
+    - 重新标记**：** 重新标记阶段就是为了修正并发标记期间因为用户程序继续运行而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段的时间稍长，远远比并发标记阶段时间短； ➡️ **第2次 STW**
     - 并发清除**：** 开启用户线程，同时 GC 线程开始对未标记的区域做清扫；
   - ![](image/jvm-垃圾回收-CMS回收器.png)
   - **缺点**：
@@ -6348,7 +6705,7 @@ public abstract class ClassLoader {
     - 它使用的回收算法-“标记-清除”算法会导致收集结束时会有大量空间碎片产生。
   - **tip：CMS 垃圾回收器在 Java 9 中已经被标记为过时(deprecated)，并在 Java 14 中被移除**
 - **G1 垃圾收集器**（JDK9之后默认）
-  - 应用于新生代和老年代，每个区域都可以充当 eden，survivor，old，humongous`(/hjuːˈmʌŋ.ɡəs/)`（其中 humongous 专为大对象准备，可以是连续的多个区域之类的）
+  - 应用于新生代和老年代，将堆内存分割为多个小区域，每个区域都可以充当 eden，survivor，old，humongous`(/hjuːˈmʌŋ.ɡəs/)`（其中 humongous 专为大对象准备，可以是连续的多个区域之类的）
   
     - 大对象在回收前永不移动，可能造成内存碎片
   - 响应时间与吞吐量兼顾
@@ -6367,8 +6724,10 @@ public abstract class ClassLoader {
     2. **Young Collection + Concurrent Mark 年轻代垃圾回收 + 并发标记**
        - 当老年代占用内存超过阈值(默认是**45%**)后，触发并发标记（标记**老年代中存活的对象**），这时无需暂停用户线程
        - 不过进入下一阶段前，有一个和CMS一样的**重新标记**阶段，**需要STW**
+       - 具体的标记过程如下（有**3次STW**：初始标记、最终标记、筛选回收）
+       - ![](image/jvm-垃圾回收-G1-标记.png)
     3. **Mixed Collection 混合收集**
-       - 不会对所有老年代区域进行回收，而是根据暂停时间目标（可配置），优先回收价值高（**即存活对象少，能清理出更多内存**）的区域,这也是 Gabage First 名称的由来
+       - 不会对所有老年代区域进行回收，而是根据暂停时间目标（可配置），优先回收价值高（**即存活对象少，能清理出更多内存**）的区域,这也是 **Gabage First** 名称的由来
        - 会对Eden区、S区、选择出的Old区一起做垃圾回收
        - ![](image/jvm-垃圾回收-G1-混合收集.png)
   - **并发失败**
@@ -6414,7 +6773,25 @@ public abstract class ClassLoader {
     java -Dserver.port=18080 -Dcsp.sentinel.dashboard.server=localhost:18080 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard-1.8.8.jar
     ```
 
-    
+
+
+
+### JVM调优思路
+
+| 维度                                                         | 意义 / 调整这个维度能带来什么效果                            | 常见 trade-off 或副作用                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **堆（Heap）总大小**                                         | 1. 太**小**的话 GC 太频繁，堆内存不够用会导致频繁 Full GC 或 OOM；<br />2. 太**大**可能内存占用高，GC pause 较久、吞吐率低，或者垃圾回收工作量大； | 增加内存有物理机器／容器资源限制；超大堆调 GC 时间长，minor GC, major GC 各阶段停顿时间可能变长；GC GC log／监控复杂度提高 |
+| **新生代 vs 老年代 比例**（即年轻代的大小占 heap 的比例）    | 1. 年轻代**大**：短生命周期对象有更多时间被回收在年轻代，减少晋升到老年代；<br />2. 年轻代**小**：少内存给 Eden + Survivor，使对象晋升更快但可能老年代负荷大； | 新生代太大 => 老年代空间变小 => major GC 更频繁；新生代太小 => minor GC 很频繁；Survivor 区太小 =>对象不能留 Survivor 多久，可能早期晋升老年代 |
+| **Survivor 区大小**                                          | 影响存活对象在年轻代中能否被保留／多少时间在 Survivor 区等待晋升；影响动态晋升年龄判断（例如 Survivor 空间占用 vs sur-vivor 中 age 分布） | Survivor 太小容易溢出或占用满，引发提前晋升；太大则浪费空间；复制开销（复制 Survivor→Survivor／Eden→Survivor）成本增高 |
+| **对象晋升（年轻代→老年代）的年龄／阈值**                    | 如果对象存活几次 young GC 才晋升老年代；<br />1. 设置太**低**会使很多其实 “还能死” 的对象早晋升，导致老年代压力高；<br />2. 设置太**高**，Survivor 区被撑满、复制成本高，对象 age 一直未晋升直到阈值或 Survivor 溢出；<br />还有 “动态年龄判定” 机制（当 Survivor 中存活对象总大小超过某比例时，可以提前晋升） | 阈值太低 => 老年代满／Major GC 频繁；太高 =>年轻代 GC 的开销（复制、扫描 survivor）变高；Survivor 内存压力／短期存活对象浪费开销 |
+| **晋升失败情况 / 分配担保（Allocation Guarantee / Promotion Failure）** | 当年轻代准备晋升对象到老年代但**老年代没空间**时，会导致 “晋升失败” 引发 Full GC 或者 STW 操作；可调比例或预留空间来保证晋升顺利 | 为了保证晋升不失败，得预留一定老年代空间，**这部分空间平时可能空闲**，影响总体可用老年代空间；也可能使老年代整体容量需求上升 |
+| **GC 暂停时间目标 /最大可接受停顿**                          | 如果对响应时间敏感／低延迟场景，希望 GC 停顿尽可能短；可以调短 max pause 时间／控制 STW 时间；如果允许吞吐优先，可以允许 GC 停顿久一点 | 降低最大暂停时间通常意味着 GC 更频繁，吞吐率下降；资源占用（更多 GC 线程，更多复制／标记工作）增加；可能导致更多开销 |
+| **GC 类型 / 回收策略（年轻代 GC 的 Parallel vs Serial vs 并发 vs 标记-清理 vs G1、ZGC 这些）** | 不同 GC 算法在大堆、低延迟、高吞吐／内存压力下表现不同；选择合适策略能有很大影响 | 算法本身可能对短生命周期／长生命周期对象分布敏感；并发 GC 的开销／复杂度；调优参数众多，容易调得乱 |
+| **Promoted 对象数量 &晋升速率**（年轻代晋升到老年代的对象比率） | 若晋升对象太多，老年代很快填满，Major GC 压力大；晋升太少的话，新生代频繁做工作，Survivor 复制／年龄判断成本高 | 晋升多 => major GC 成本高，停顿长；晋升少 => young GC 成本高／频繁；要平衡两者 |
+| **Survivor 内部的年龄分布／动态晋升机制**                    | JVM 通常不仅看固定阈值，有“动态年龄判断”：如果 Survivor 中 age ≤ N 的对象总大小到达 Survivor 区一半，会把 ≥ N 年龄对象晋升。这个机制可调／可观察。这样可以避免 Survivor 阈值设得过高／过低导致浪费或老年代压力。 | 动态年龄判断带来的不确定性；在不同负载／对象生命周期分布下效果差异大；可能调试和预测比较难 |
+| **垃圾的分配速率 / 申请对象速率**                            | GC 的负载与申请对象的速率强相关：对象创建越快／短命对象越多 ⇒ young GC 更频繁；如果能减少对象分配速率／缓存可重用对象就能减轻 GC 压力 | 有时候业务逻辑里难优化；缓存／重用对象可能带来复杂性／内存泄漏风险 |
+
+
 
 ### JVM调优参数
 
@@ -6424,7 +6801,7 @@ public abstract class ClassLoader {
 
 - 设置堆空间大小
 
-  - 最大大小的默认值是物理内存的1/4，初始大小是物理内存的1/64；但是默认不好，通常是把2个设置为相同的值；
+  - 最大大小的默认值是物理内存的1/4，初始大小是物理内存的1/64；但是默认不好，通常是把2个设置为相同的值，避免动态调整带来的性能开销；
 
   - ```
     -Xms1024k 设置堆的初始化大小
@@ -7017,6 +7394,309 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 
 
 
+# JDK新特性
+
+没有记全，把重点的记一记
+
+## Java8
+
+2014年
+
+- lambda表达式
+- stream流
+- Optional 防止 NPE
+
+Java9
+
+2017年
+
+- 快速创建不可变集合
+
+  - ```java
+    List.of("Java", "C++");
+    Set.of("Java", "C++");
+    Map.of("Java", 1, "C++", 2);
+    ```
+
+- String存储优化
+
+  - 从`char[]`变为`byte[]`
+  - 具体看[字符串存储](#字符串存储)
+
+## Java10
+
+2018年
+
+- `var`局部变量推断
+
+  - ```java
+    var id = 0;
+    var codefx = new URL("https://mp.weixin.qq.com/");
+    var list = new ArrayList<>();
+    var list = List.of(1, 2, 3);
+    var map = new HashMap<String, String>();
+    var p = Paths.of("src/test/java/Java9FeaturesTest.java");
+    var numbers = List.of("a", "b", "c");
+    for (var n : list)
+        System.out.print(n+ " ");
+    ```
+
+- 拷贝出不可变集合
+
+  - ```java
+    List<Integer> list = List.of(1, 2, 3, 4, 5, 5, 6, 7);
+    List<Integer> copiedList = List.copyOf(list); // 无法做增删改
+    ```
+
+## Java14
+
+2020年
+
+- switch增强
+
+  - 在java12中提出，当时的预览版
+
+  - ```java
+    String result = switch (day) {
+        case "M", "W", "F" -> "MWF";
+        case "T", "TH", "S" -> "TTS";
+        default -> {
+            if (day.isEmpty())
+                yield "Please insert a valid day.";
+            else
+                yield "Looks like a Sunday.";
+        }
+    
+    };
+    System.out.println(result);
+    ```
+
+## Java15
+
+2020年
+
+- 文本快
+
+  - 在Java13中提出，当时是预览版
+
+  - ```java
+    // 支持用3个双引号引用一块多行文本
+    String json = """
+            {
+                "name":"mkyong",
+                "age":38
+            }
+            """;
+    ```
+
+## Java16
+
+2021年
+
+- instance of 模式匹配
+
+  - 在java12中提出，当时是预览版
+
+  - ```java
+    Object obj = "abcde";
+    if (obj instanceof String str) { // 在判断类型时可顺便声明一个强转类型后的变量
+        System.out.println(str); 
+    }
+    ```
+
+- 记录类
+
+  - 在java14中提出，当时是预览版
+
+  - ```java
+    // 传统方式
+    public class Person {
+        private final String name;
+        private final int age;
+        
+        public Person(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+        
+        // 需要手动实现getter、equals、hashCode、toString...
+    }
+    
+    // Record方式
+    public record Person(String name, int age) {}
+    ```
+
+  - 编译器自动创建：
+
+    - 私有final字段
+    - 公共构造函数
+    - 访问器方法（`name()`, `age()`）
+    - 自动生成`equals()`, `hashCode()`, `toString()`
+
+## Java17
+
+2021年
+
+- 密封类
+
+  - ```java
+    // 允许一个类明确指定哪些其他类可以继承它，从而限制类的继承结构
+    public sealed class 父类 permits 子类1, 子类2, 子类3 {
+        // 类实现
+    }
+    ```
+
+## Java18
+
+2022年年
+
+- JDK 终于将 **UTF-8** 设置为默认字符集
+  - 在 Java 17 及更早版本中，默认字符集是在 Java 虚拟机运行时才确定的，取决于不同的操作系统、区域设置等因素；
+
+## Java21
+
+2023年
+
+- switch 支持 incetance of 模式匹配
+
+  - 在java17中提出，当时是预览版
+
+  - ```java
+    static String formatterPatternSwitch(Object o) {
+        return switch (o) {
+            case Integer i -> String.format("int %d", i);
+            case Long l    -> String.format("long %d", l);
+            case Double d  -> String.format("double %f", d);
+            case String s  -> String.format("String %s", s);
+            default        -> o.toString();
+        };
+    }
+    ```
+
+- 记录模式
+
+  - 在java19中提出，当时是预览版
+
+  - 配合 instance of 直接解构属性值
+
+  - ```java
+    record Point(int x, int y) {}
+    
+    // 传统方式
+    if (obj instanceof Point) {
+        Point p = (Point) obj;
+        System.out.println(p.x() + p.y());
+    }
+    
+    // 使用记录模式（Java 21）
+    if (obj instanceof Point(int x, int y)) {
+        System.out.println(x + y); // 直接使用解构出的变量
+    }
+    
+    // 在switch中使用
+    String result = switch (shape) {
+        case Circle(double radius) -> "圆形，半径: " + radius;
+        case Rectangle(double width, double height) -> "矩形，宽: " + width + " 高: " + height;
+        default -> "未知形状";
+    };
+    ```
+
+- 虚拟线程
+
+  - 在java19中提出，当时是预览版；
+
+  - Java虚拟线程是一种在Java虚拟机（JVM）层面实现的逻辑线程，不直接和操作系统的物理线程一一对应；是由**JVM管理**的轻量级线程，其创建和切换成本非常低，允许应用程序中创建大量的线程而不会耗尽系统资源；
+
+  - **载体线程(Carrier Thread)机制**：虚拟线程运行在少量的平台线程(称为载体线程)之上，当虚拟线程遇到阻塞操作(如I/O)时，JVM会自动将其挂起并释放载体线程，让其他虚拟线程使用；
+
+    - **非绑定式执行**：虚拟线程在运行周期内不依赖特定的操作系统线程，可以在不同的载体线程间迁移；
+
+  - **Spring Boot 3.2**正式集成了对虚拟线程的支持，要启用它需要将`spring.threads.virtual.enabled`属性设置为true，并使用JDK 21环境；
+
+    - Tomcat 10+版本已支持虚拟线程；默认情况下，Spring Boot 3.2会使用虚拟线程创建线程而不是传统的线程池；
+
+  - ![](image/虚拟线程.png)
+
+  - ```java
+    public class VirtualThreadExample {
+        public static void main(String[] args) {
+            
+            // startVirtualThread()方法
+            Thread.startVirtualThread(() -> {
+                System.out.println("Current thread: " + Thread.currentThread());
+            });
+            
+            // ofVirtual()方法，返回的是一个构造器Thread.Builder.OfVirtual
+            Thread.ofVirtual().start(() -> {
+                System.out.println("Using builder");
+            });
+            
+            // 虚拟线程池
+            try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                executor.submit(() -> {
+                    System.out.println("Task running in virtual thread");
+                    return null;
+                });
+                // 注意：需要保持主线程存活，以便虚拟线程有机会执行
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+        }
+    }
+    ```
+
+- 预览特性
+
+  - 字符串模板
+
+    - 类似js的`Greetings ${ name }!`
+
+    - ```java
+      String message = STR."Greetings \{name}!";
+      ```
+
+  - 未命名模式
+
+    - 类似kotlin，可以使用下划线 `_` 表示未命名的变量以及模式匹配时不使用的组件
+
+    - ```java
+      try (var _ = ScopedContext.acquire()) {
+        // No use of acquired resource
+      }
+      try { ... }
+      catch (Exception _) { ... }
+      catch (Throwable _) { ... }
+      
+      for (int i = 0, _ = runOnce(); i < arr.length; i++) {
+        ...
+      }
+      ```
+
+  - 不定义类名的main方法
+
+    - ```java
+      // 原始写法
+      public class HelloWorld {
+          public static void main(String[] args) {
+              System.out.println("Hello, World!");
+          }
+      }
+      
+      // java21新特性写法
+      class HelloWorld {
+          void main() {
+              System.out.println("Hello, World!");
+          }
+      }
+      
+      // 进一步精简写法
+      void main() {
+         System.out.println("Hello, World!");
+      }
+      ```
+
 
 
 # 其他面试题
@@ -7089,3 +7769,74 @@ JVM的解释器叫做**模板解释器**，相比传统解释器， 解释器在
 
 服务端返回的数据以`data: `前缀分隔，每段以`\n\n`结束；
 
+
+
+## 抽奖算法
+
+### 固定名额抽奖
+
+年会上，公司有n人参与抽奖，其中有`a`个一等奖，`b`个二等奖，`c`个三等奖，剩下 `(n - a - b - c)` 个不中奖；
+
+我们将n个token放入Redis的list中（token表示几等奖），其中包含了`a`个一等奖...即含有一等奖/二等奖/三等奖/未中奖类型；
+
+每个人抽奖时，用`LPOP`命令拿出一个token即可；
+
+### 加权抽奖
+
+有些人可能参与了年会的节目表演，希望这些人的中奖概率高一些，假设有`x`个表演者；
+
+额外放入多余的`未中奖token`，然后表演者每次可多拿出token；
+
+例如表演者每次拿3个token，则我们需要多放入`x * 2`个token到list中；
+
+还有另一个思路，**一次性抽奖**：
+
+1. 将每个人的编号放入List中，1人放1个编号，而表演者放3个相同的编号；
+2. 然后随机打乱List，前`a + b + c`个人就是中奖的人；
+3. 如果中奖的人含重复的编号（表演者的），假设重复个数为`m`，则顺延多`m`位，直到不再有重复；
+
+
+
+## 伪代码实现下单逻辑
+
+伪代码实现下单接口：扣减库存、创建订单
+
+要求：
+
+- 吞吐高
+- 商品不超卖
+- 每人限购一件
+- 下单同步
+
+```java
+Result<OrderToken> confirmOrder(Order order) {
+    
+    // 生成订单ID
+    Stirng orderId = SnowFlakeUtil.getNextId();
+    order.setOrderId(orderId);
+    
+    // 库存key（商品上架前，先在redis中准备库存数据）
+    String stockKey = "stock:" + order.getProductId();
+    // 限购key
+    String boughtKey = "bought:" + order.getProductId() + ":" + order.getUserId();
+    
+    // 检查是否已经购买过（限购）
+    if (!checkBought(boughtKey)) { // 用setnx命令，检查是否成功，不设置过期时间
+        throw new BusinessException("无法重复下单");
+    }
+    
+    // 扣减库存
+    if (!updateStock(stockKey)) { // 用lua脚本（或直接用redisson分布式锁），先检查库存数量，再扣减库存
+        throw new BusinessException("商品已售罄");
+    }
+    
+    // 扣减成功
+    // 1. 异步扣减mysql库存（需要保证尽可能扣减成功，失败加入DLQ或人工处理）
+    // 2. 还需要创建订单（也可以同步创建）
+    mqTemplate.send(JSONUtil.toJsonString(order)); // 这里也可以先在outbox插入一条记录（则要使用事务）
+    
+    // 成功则返回订单ID
+    return Result.success(orderId);
+    
+}
+```
