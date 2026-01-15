@@ -94,13 +94,11 @@ curl https://api.deepseek.com/chat/completions \
 
 ### 引入依赖
 
-截止 2025-08-19 最新依赖版本是 `1.3.0`
-
 ```xml
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-open-ai</artifactId>
-    <version>1.3.0</version>
+    <version>1.10.0-beta18</version>
 </dependency>
 ```
 
@@ -127,13 +125,11 @@ String responseMessage = model.chat("早上好！"); // 接收模型的回复
 
 ### 引入依赖
 
-截止 2025-08-19 最新依赖版本是 `1.3.0-beta9`
-
 ```xml
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
-    <version>1.3.0-beta9</version>
+    <version>1.10.0-beta18</version>
 </dependency>
 ```
 
@@ -181,6 +177,16 @@ curl --location 'http://localhost:8080/chat' \
 ## 声明式服务
 
 > 上文提到的为基本使用（白学），该部分才更贴近SpringBoot项目的开发思想；
+
+需要引入新的依赖：
+
+```xml
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-spring-boot-starter</artifactId>
+    <version>1.10.0-beta18</version>
+</dependency>
+```
 
 ### AiService
 
