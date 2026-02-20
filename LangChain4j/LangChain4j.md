@@ -230,6 +230,149 @@ langchain4j.ollama.chat-model.model-name=llama3.1
 
 ### 流式输出
 
+流式输出分为`Flux`和`TokenStream`：
+
+- `TokenStream` 是 LangChain4j AI Service 风格，回调式，配合SSE很简单；
+- `Flux` 是 Reactor 响应式流风格；
+
+> 二者其实都可以在 **阻塞式** 的SpringBoot 项目里使用；
+
+首先需要配置一个流式传输的模型：
+
+```yaml
+# 大模型配置，这里用deepseek
+langchain4j:
+  open-ai:
+    streaming-chat-model: # 流式传输模型
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      model-name: deepseek-chat
+      log-requests: true
+      log-responses: true
+    chat-model: # 阻塞式模型
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      model-name: deepseek-chat
+      log-requests: true
+      log-responses: true
+```
+
+然后在`@AiService`里指定：
+
+```java
+@AiService(
+        streamingChatModel = "openAiStreamingChatModel",
+)
+```
+
+
+
+#### TokenStream 方式
+
+将`AiService`的方法的返回值改成`LangChain4j`框架带的`TokenStream`；
+
+```java
+public interface Assistant {
+    @SystemMessage("你是一个快递驿站的智能助手")
+    TokenStream chat(@UserMessage String message);
+}
+```
+
+在`Service`层创建一个返回值是`SseEmitter`的方法；
+
+> SseEmitter是Spring提供的一个用于SSE响应的类，可以通过`.send()`回调发送数据，通过`.complete()`结束连接；
+
+```java
+public SseEmitter adminChat(String message) {
+    SseEmitter emitter = new SseEmitter(0L); // 参数是timeout，为0表示永不超时
+    TokenStream tokenStream = assistant.chat(message);
+
+    // 写好tokenStream的逻辑后启动
+    tokenStream
+        .onPartialResponse( /* 每个分片token到达时触发的逻辑*/ )
+        .onCompleteResponse( /* 模型完整结束时触发的逻辑 */ )
+        .onError(emitter::completeWithError)
+        .start();
+
+    return emitter;
+}
+```
+
+`TokenStream`有很多方法，具体看https://docs.langchain4j.dev/tutorials/ai-services#streaming，但必要的方法就是上面代码中的四个；
+
+具体示例：
+
+```java
+MediaType UTF8_TEXT = new MediaType("text", "plain", StandardCharsets.UTF_8); // UTF8防中文乱码
+
+tokenStream
+    .onPartialResponse(partial -> { // 每个分片 token 到达时触发
+        try {
+            emitter.send(
+                SseEmitter.event() // 创建一个SSE事件
+                .name("token") // 事件名称
+                .data(partial, UTF8_TEXT) // 数据是模型当前响应的token
+            );
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+    })
+    .onCompleteResponse(resp -> { // 模型完整结束时触发
+        try {
+            String fullText = resp.aiMessage().text(); // 完整回复
+            emitter.send(
+                SseEmitter.event()
+                .name("done")
+                .data(fullText, UTF8_TEXT) // 数据是模型的完整内容
+            );
+        } catch (Exception ignored) {
+        } finally {
+            emitter.complete();
+        }
+    })
+    .onError(emitter::completeWithError)
+    .start();
+```
+
+最后在Controller层调用`SseEmitter`，返回，需要加上`text/event-stream`，表明这是个**SSE响应类型**（`springframework`有给出常量类）
+
+```java
+@GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter chat(String message) {
+    return assistantService.chat(message);
+}
+```
+
+在浏览器调试，可以看到前端接收到类似下面这样的数据；可以看到一个个`event`，一开始是很多`token`，最后是一个`done`，和代码里一致；
+
+```
+event:token
+data:你好
+
+event:token
+data:！
+
+event:token
+data:我是
+
+event:token
+data:快递
+
+event:token
+data:驿站
+
+# 这里省略掉一些内容...
+
+event:done
+data:你好！我是快递驿站管理后台助手，可以帮你处理门店管理、货架管理、包裹查询、包裹出入库等系统内业务。请告诉我你需要办理的具体任务。
+```
+
+
+
+#### Flux 方式
+
+> 这里就大概说说。
+
 需要引入依赖：
 
 ```xml
@@ -243,8 +386,18 @@ langchain4j.ollama.chat-model.model-name=llama3.1
 用`Flux`代替`String`：
 
 ```java
-interface Assistant {
- 	Flux<String> chat(String message);
+public interface Assistant {
+    @SystemMessage("你是一个快递驿站的智能助手")
+    Flux<String> chat(@UserMessage String message);
+}
+```
+
+Controller层的方法的返回值也改成`Flux<String>`，还需要加上`text/event-stream`，表明这是个**SSE响应类型**（`springframework`有给出常量类），HTTP长连接，服务端不断推送数据；
+
+```java
+@GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public Flux<String> chat(String message) {
+    return assistant.chat(message);
 }
 ```
 
