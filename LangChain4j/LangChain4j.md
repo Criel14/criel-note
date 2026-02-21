@@ -764,6 +764,33 @@ public class PersistentChatMemoryStore implements ChatMemoryStore {
 
 考虑高可用性，可以使用**冷热数据分离**，即Redis + MySQL：Redis中保存完整消息的JSON格式，每次全量更新，MySQL每行一条消息，每次增量更新；
 
+最后，在配置类里注入`PersistentChatMemoryStore`，并设置为`ChatMemory`的属性：
+
+```java
+@Configuration
+@RequiredArgsConstructor
+public class AssistantConfig {
+    
+    private final PersistentChatMemoryStore persistentChatMemoryStore;
+
+    @Bean
+    public ChatMemoryProvider chatMemoryProvider() {
+        return new ChatMemoryProvider() {
+
+            @Override
+            public ChatMemory get(Object memoryId) {
+                return MessageWindowChatMemory.builder()
+                        .id(memoryId)
+                        .maxMessages(10)
+                        .chatMemoryStore(persistentChatMemoryStore) // 设置chatMemoryStore
+                        .build();
+            }
+        };
+    }
+
+}
+```
+
 
 
 
