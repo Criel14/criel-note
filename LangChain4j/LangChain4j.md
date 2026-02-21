@@ -563,15 +563,23 @@ public interface assistant {
 
 
 
-## 会话记忆与隔离
+## 会话记忆
 
-框架会通过维护一些列**对象**来标识，并有`memoryId → ChatMemory`的映射，将之前的对话存储在内存中；
+> langchain4j默认是**单机内存模型**，按照`memoryId`的映射存在内存中的做法，在多实例时容易出现问题，一般建议**单机部署**，或者自己加一层，实现**锁**、**负载均衡**等等；
+
+### 会话记忆隔离
+
+框架会通过维护一些列**对象**来标识，并有`memoryId → ChatMemory`的映射，将之前的对话存储在**内存中**（重启则会失效），底层是一个`List`；
 
 `memoryId`可以是任意类型的对象，没有限制，只要类正确覆盖了 `equals()` 和 `hashCode()`，就可以作为 memoryId 用来区分不同会话；
 
-一般的做法：**前端**可以传递给后端一个 **会话 ID / 用户 ID / Token**，作为 `@MemoryId`；
+常规做法：**后端**先给一个“新建对话”接口，**前端**调用拿到一个新的`memoryId`（可以是雪花ID，UUID，自定义ID等等），之后每轮对话前端都携带这个`memoryId`，发送给后端的对话接口；
 
-> 如果配置了记忆，但没有配置`memoryId`做会话隔离，则所有对话都储存在`"default"`这个`memoryId`中，会有不同用户串记忆的问题；
+> [!tip]
+>
+> 如果配置了会话记忆，但没有配置`memoryId`，则无法**会话隔离**，所有对话都储存在`"default"`这个`memoryId`中，会有不同用户串记忆的问题；
+>
+> 意思就是：如果 AI 服务方法没有用 `@MemoryId` 注解的参数， `ChatMemoryProvider` 中 `memoryId` 的值将默认为字符串 `"default"`；
 
 具体操作如下：
 
@@ -606,6 +614,22 @@ public class AssistantConfig {
 }
 ```
 
+> [!tip]
+>
+> 重写的` public ChatMemory get(Object memoryId)`方法，是查询 `memoryId → ChatMemory` 的映射时，若没有找到，则调用这个方法来创建一个`ChatMemory`，若找到则不会调用这个方法；
+
+```
+AiService
+   ↓
+ChatMemoryProvider.get(memoryId)   ← 只调用一次
+   ↓
+创建 ChatMemory（内存对象）
+   ↓
+（如果有 store）从 store 加载历史
+   ↓
+缓存到 AiService 内部 Map
+```
+
 然后添加`@AiService`的参数，指定`Bean`名称，并且方法的参数加上一个`memoryId`，并用`@MemoryId`注解修饰：
 
 ```java
@@ -617,8 +641,133 @@ public interface Assistant {
 }
 ```
 
+> [!warning]
+>
+> 官方：不应对同一个 `@MemoryId` 并发调用 AI 服务， 因为这可能导致 `ChatMemory` 损坏。 目前，AI 服务没有实现任何机制来防止对同一 `@MemoryId` 的并发调用；
+
+
+
+### 会话记忆清理
+
+当对话数量变多时，`ChatMemory`越多，内存占用越大，框架本身并不会自动清理，只能手动：
+
+首先让`AiService`接口继承`ChatMemoryAccess`：
+
+```java
+interface Assistant extends ChatMemoryAccess {
+    String chat(@MemoryId int memoryId, @UserMessage String message);
+}
+```
+
+这样就多了一个清理的方法：
+
+```java
+String answerToKlaus = assistant.chat(1, "Hello, my name is Klaus");
+String answerToFrancine = assistant.chat(2, "Hello, my name is Francine");
+
+// 获取消息List
+List<ChatMessage> messagesWithKlaus = assistant.getChatMemory(1).messages();
+// 清理会话记忆
+boolean chatMemoryWithFrancineEvicted = assistant.evictChatMemory(2);
+```
+
+为了能够随时清理，我们需要把这些`memoryId`都存储起来（自己写一个Map，或者数据库），清理时机：
+
+- 定时任务清理xx分钟前的会话
+- 会话结束：用户主动点击“退出对话”（如果有这个按钮的话），WebSocket连接断开（但现在基本都用SSE）
+
+
+
+### 会话记忆持久化
+
+我们可以在`MessageWindowChatMemory`的源码看到（节选部分源码）下面的内容：
+
+```java
+public class MessageWindowChatMemory implements ChatMemory {
+    
+    private final ChatMemoryStore store; // 一个ChatMemoryStore接口
+    
+    public void add(ChatMessage message) {
+        ...
+        this.store.updateMessages(this.id, messages); // 调用store的方法去存储消息
+    }
+    
+    public void clear() {
+        this.store.deleteMessages(this.id); // 调用store的方法去删除消息
+    }
+    
+    ...
+}
+```
+
+其中`ChatMemoryStore`接口默认使用这个实现类：
+
+```java
+class SingleSlotChatMemoryStore implements ChatMemoryStore {
+    private List<ChatMessage> messages = new ArrayList(); // 消息用一个 List 存储
+    private final Object memoryId; // 一个store对应一个memoryId
+
+    public SingleSlotChatMemoryStore(Object memoryId) {
+        this.memoryId = memoryId; 
+    }
+
+    public List<ChatMessage> getMessages(Object memoryId) { // 获取消息
+        this.checkMemoryId(memoryId); // 检查memoryId
+        return this.messages; // 返回List
+    }
+
+    public void updateMessages(Object memoryId, List<ChatMessage> messages) { // 更新消息（全量更新）
+        this.checkMemoryId(memoryId);
+        this.messages = messages;
+    }
+
+    public void deleteMessages(Object memoryId) { // 删除消息
+        this.checkMemoryId(memoryId);
+        this.messages = new ArrayList();
+    }
+
+    private void checkMemoryId(Object memoryId) { // 检查memoryId是否对应
+        if (!this.memoryId.equals(memoryId)) {
+            String var10002 = String.valueOf(this.memoryId);
+            throw new IllegalStateException("This chat memory has id: " + var10002 + " but an operation has been requested on a memory with id: " + String.valueOf(memoryId));
+        }
+    }
+}
+```
+
+因此，我们只要把上面几个方法中，对于`List`的操作改为对数据库的操作，就时所谓的**会话记忆持久化**了；
+
+```java
+// 自己的store实现类
+@Component
+public class PersistentChatMemoryStore implements ChatMemoryStore {
+
+    @Override
+    public List<ChatMessage> getMessages(Object o) {
+        // TODO 实现获取消息的逻辑
+    }
+
+    @Override
+    public void updateMessages(Object o, List<ChatMessage> list) {
+        // TODO 实现更新消息的逻辑
+    }
+
+    @Override
+    public void deleteMessages(Object o) {
+        // TODO 实现删除消息的逻辑
+    }
+
+}
+```
+
+中小型项目：直接采用Redis存储即可；
+
+考虑高可用性，可以使用**冷热数据分离**，即Redis + MySQL：Redis中保存完整消息的JSON格式，每次全量更新，MySQL每行一条消息，每次增量更新；
+
+
+
 
 
 ## 其他
 
-还有RAG、消息持久化等，就看官方文档吧
+还有RAG等就看官方文档吧
