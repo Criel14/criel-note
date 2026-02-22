@@ -200,7 +200,7 @@ public interface Assistant {
 }
 ```
 
-当有多个AI服务时，需使用显式装配模式（`@AiService(wiringMode = EXPLICIT)`）指定要使用的组件：
+**重要**：当有多个 AiService 时，需使用**显式装配模式**（`@AiService(wiringMode = EXPLICIT)`）指定要使用的组件；否则，默认 AUTOMATIC 时，框架会把容器里所有工具类 `@Tool Bean`都挂到 AiService 上，导致串提示词；
 
 ```java
 @AiService(wiringMode = EXPLICIT, chatModel = "openAiChatModel")
