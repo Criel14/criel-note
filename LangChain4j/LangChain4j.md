@@ -303,31 +303,40 @@ public SseEmitter adminChat(String message) {
 具体示例：
 
 ```java
-MediaType UTF8_TEXT = new MediaType("text", "plain", StandardCharsets.UTF_8); // UTF8防中文乱码
+MediaType UTF8_JSON = new MediaType("application", "json", StandardCharsets.UTF_8); // 格式、编码
+SseEmitter emitter = new SseEmitter(0L); // timeout 为0表示永不超时
+AtomicLong seq = new AtomicLong(0); // 统计序列编号
+TokenStream tokenStream = adminAssistant.adminChat(memoryId, message);
 
 tokenStream
     .onPartialResponse(partial -> { // 每个分片 token 到达时触发
         try {
+            Map<String, String> dataMap = Map.of(
+                "seq", String.valueOf(seq.incrementAndGet()),
+                "content", partial == null ? "" : partial
+            ); // 将数据存为map而不是直接发送partial，直接发送会导致换行符等发送失效
             emitter.send(
-                SseEmitter.event() // 创建一个SSE事件
-                .name("token") // 事件名称
-                .data(partial, UTF8_TEXT) // 数据是模型当前响应的token
+                SseEmitter.event()
+                .name("token")
+                .data(dataMap, UTF8_JSON) // 发送包含本次token的数据
             );
         } catch (Exception e) {
-            emitter.completeWithError(e);
+            emitter.completeWithError(e); // 异常结束SSE连接
         }
     })
     .onCompleteResponse(resp -> { // 模型完整结束时触发
         try {
-            String fullText = resp.aiMessage().text(); // 完整回复
+            Map<String, Boolean> dataMap = Map.of(
+                "finish", true
+            );
             emitter.send(
                 SseEmitter.event()
                 .name("done")
-                .data(fullText, UTF8_TEXT) // 数据是模型的完整内容
+                .data(dataMap, UTF8_JSON) // 发送结束信息
             );
         } catch (Exception ignored) {
         } finally {
-            emitter.complete();
+            emitter.complete(); // 正常结束SSE连接
         }
     })
     .onError(emitter::completeWithError)
@@ -346,25 +355,7 @@ public SseEmitter chat(String message) {
 在浏览器调试，可以看到前端接收到类似下面这样的数据；可以看到一个个`event`，一开始是很多`token`，最后是一个`done`，和代码里一致；
 
 ```
-event:token
-data:你好
 
-event:token
-data:！
-
-event:token
-data:我是
-
-event:token
-data:快递
-
-event:token
-data:驿站
-
-# 这里省略掉一些内容...
-
-event:done
-data:你好！我是快递驿站管理后台助手，可以帮你处理门店管理、货架管理、包裹查询、包裹出入库等系统内业务。请告诉我你需要办理的具体任务。
 ```
 
 
@@ -559,6 +550,38 @@ public interface assistant {
         }
     }
 } ]
+```
+
+> [!tip]
+>
+> 框架通过异步现成发起工具调用，因此`ThreadLocal`会失效，可以采用补救方案：在Redis中，以`memoryId`作为key，以`userId`作为value，这样就可以在每次对话时获取到用户的id信息；
+>
+> 可以通过`@ToolMemoryId`在工具函数中获取到`memoryId`
+
+```java
+@Tool("do something")
+public ToolResult<Something> myTool(@ToolMemoryId String memoryId) {
+    try {
+        Long userId = getUserId(memoryId); // 从redis中获取用户ID
+        ...; // 其他业务逻辑
+    } catch (RuntimeException e) {
+        return ToolResult.error(e.getMessage()); // 把异常封装给到统一返回结果ToolResult中
+    }
+}
+
+/**
+ * 从redis中，基于memoryId，获取用户ID
+ * tip：在工具函数调用时，请求头里不会携带用户信息，所以需要手动传参
+ */
+private Long getUserId(String memoryId) {
+    String key = RedisKeyConstant.AI_CHAT_USER_ID + memoryId;
+    RBucket<Long> rBucket = redissonClient.getBucket(key);
+    if (!rBucket.isExists()) {
+        // 获取用户ID失败
+        throw new RuntimeException("系统异常，请联系管理员");
+    }
+    return rBucket.get();
+}
 ```
 
 
