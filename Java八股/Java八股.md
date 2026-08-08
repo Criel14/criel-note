@@ -6214,6 +6214,399 @@ tip：想到个有意思的，内存泄漏后，因为Entry数组的内存位置
 
 
 
+# JDK新特性
+
+没有记全，把重点的记一记
+
+## JDK8
+
+2014年
+
+- lambda表达式
+- stream流
+- Optional 防止 NPE
+
+## JDK9
+
+2017年
+
+- 快速创建不可变集合
+
+  - ```java
+    List.of("Java", "C++");
+    Set.of("Java", "C++");
+    Map.of("Java", 1, "C++", 2);
+    ```
+
+- String存储优化
+
+  - 从`char[]`变为`byte[]`
+  - 具体看[字符串存储](#字符串存储)
+
+## JDK10
+
+2018年
+
+- `var`局部变量推断
+
+  - ```java
+    var id = 0;
+    var codefx = new URL("https://mp.weixin.qq.com/");
+    var list = new ArrayList<>();
+    var list = List.of(1, 2, 3);
+    var map = new HashMap<String, String>();
+    var p = Paths.of("src/test/java/Java9FeaturesTest.java");
+    var numbers = List.of("a", "b", "c");
+    for (var n : list)
+        System.out.print(n+ " ");
+    ```
+
+- 拷贝出不可变集合
+
+  - ```java
+    List<Integer> list = List.of(1, 2, 3, 4, 5, 5, 6, 7);
+    List<Integer> copiedList = List.copyOf(list); // 无法做增删改
+    ```
+
+## JDK14
+
+2020年
+
+- switch增强
+
+  - 在jdk12中提出，当时的预览版
+
+  - ```java
+    String result = switch (day) {
+        case "M", "W", "F" -> "MWF";
+        case "T", "TH", "S" -> "TTS";
+        default -> {
+            if (day.isEmpty())
+                yield "Please insert a valid day.";
+            else
+                yield "Looks like a Sunday.";
+        }
+    
+    };
+    System.out.println(result);
+    ```
+
+## JDK15
+
+2020年
+
+- 文本快
+
+  - 在Jdk13中提出，当时是预览版
+
+  - ```java
+    // 支持用3个双引号引用一块多行文本
+    String json = """
+            {
+                "name":"mkyong",
+                "age":38
+            }
+            """;
+    ```
+
+## JDK16
+
+2021年
+
+- instance of 模式匹配
+
+  - 在jdk12中提出，当时是预览版
+
+  - ```java
+    Object obj = "abcde";
+    if (obj instanceof String str) { // 在判断类型时可顺便声明一个强转类型后的变量
+        System.out.println(str); 
+    }
+    ```
+
+- 记录类
+
+  - 在jdk14中提出，当时是预览版
+
+  - ```java
+    // 传统方式
+    public class Person {
+        private final String name;
+        private final int age;
+        
+        public Person(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+        
+        // 需要手动实现getter、equals、hashCode、toString...
+    }
+    
+    // Record方式
+    public record Person(String name, int age) {}
+    ```
+
+  - 编译器自动创建：
+
+    - 私有final字段
+    - 公共构造函数
+    - 访问器方法（`name()`, `age()`）
+    - 自动生成`equals()`, `hashCode()`, `toString()`
+
+## JDK17
+
+2021年
+
+- 密封类
+
+  - ```java
+    // 允许一个类明确指定哪些其他类可以继承它，从而限制类的继承结构
+    public sealed class 父类 permits 子类1, 子类2, 子类3 {
+        // 类实现
+    }
+    ```
+
+## JDK18
+
+2022年年
+
+- JDK 终于将 **UTF-8** 设置为默认字符集
+  - 在 jdk 17 及更早版本中，默认字符集是在 Java 虚拟机运行时才确定的，取决于不同的操作系统、区域设置等因素；
+
+## JDK21
+
+2023年
+
+- switch 支持 incetance of 模式匹配
+
+  - 在java17中提出，当时是预览版
+
+  - ```java
+    static String formatterPatternSwitch(Object o) {
+        return switch (o) {
+            case Integer i -> String.format("int %d", i);
+            case Long l    -> String.format("long %d", l);
+            case Double d  -> String.format("double %f", d);
+            case String s  -> String.format("String %s", s);
+            default        -> o.toString();
+        };
+    }
+    ```
+
+- 记录模式
+
+  - 在jdk19中提出，当时是预览版
+
+  - 配合 instance of 直接解构属性值
+
+  - ```java
+    record Point(int x, int y) {}
+    
+    // 传统方式
+    if (obj instanceof Point) {
+        Point p = (Point) obj;
+        System.out.println(p.x() + p.y());
+    }
+    
+    // 使用记录模式（Java 21）
+    if (obj instanceof Point(int x, int y)) {
+        System.out.println(x + y); // 直接使用解构出的变量
+    }
+    
+    // 在switch中使用
+    String result = switch (shape) {
+        case Circle(double radius) -> "圆形，半径: " + radius;
+        case Rectangle(double width, double height) -> "矩形，宽: " + width + " 高: " + height;
+        default -> "未知形状";
+    };
+    ```
+
+- 虚拟线程
+
+  - 在jdk19中提出，当时是预览版；
+
+  - Java虚拟线程是一种在Java虚拟机（JVM）层面实现的逻辑线程，不直接和操作系统的物理线程一一对应；是由**JVM管理**的轻量级线程，其创建和切换成本非常低，允许应用程序中创建大量的线程而不会耗尽系统资源；
+
+  - **载体线程(Carrier Thread)机制**：虚拟线程运行在少量的平台线程(称为载体线程)之上，当虚拟线程遇到阻塞操作(如I/O)时，JVM会自动将其挂起并释放载体线程，让其他虚拟线程使用；
+
+    - **非绑定式执行**：虚拟线程在运行周期内不依赖特定的操作系统线程，可以在不同的载体线程间迁移；
+
+  - **Spring Boot 3.2**正式集成了对虚拟线程的支持，要启用它需要将`spring.threads.virtual.enabled`属性设置为true，并使用JDK 21环境；
+
+    - Tomcat 10+版本已支持虚拟线程；默认情况下，Spring Boot 3.2会使用虚拟线程创建线程而不是传统的线程池；
+
+  - ![](image/虚拟线程.png)
+
+  - ```java
+    public class VirtualThreadExample {
+        public static void main(String[] args) {
+            
+            // startVirtualThread()方法
+            Thread.startVirtualThread(() -> {
+                System.out.println("Current thread: " + Thread.currentThread());
+            });
+            
+            // ofVirtual()方法，返回的是一个构造器Thread.Builder.OfVirtual
+            Thread.ofVirtual().start(() -> {
+                System.out.println("Using builder");
+            });
+            
+            // 虚拟线程池
+            try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                executor.submit(() -> {
+                    System.out.println("Task running in virtual thread");
+                    return null;
+                });
+                // 注意：需要保持主线程存活，以便虚拟线程有机会执行
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+        }
+    }
+    ```
+
+- 预览特性
+
+  - 字符串模板
+
+    - 类似js的`Greetings ${ name }!`
+
+    - ```java
+      String message = STR."Greetings \{name}!";
+      ```
+
+  - 未命名模式
+
+    - 类似kotlin，可以使用下划线 `_` 表示未命名的变量以及模式匹配时不使用的组件
+
+    - ```java
+      try (var _ = ScopedContext.acquire()) {
+        // No use of acquired resource
+      }
+      try { ... }
+      catch (Exception _) { ... }
+      catch (Throwable _) { ... }
+      
+      for (int i = 0, _ = runOnce(); i < arr.length; i++) {
+        ...
+      }
+      ```
+
+  - 不定义类名的main方法
+
+    - ```java
+      // 原始写法
+      public class HelloWorld {
+          public static void main(String[] args) {
+              System.out.println("Hello, World!");
+          }
+      }
+      
+      // java21新特性写法
+      class HelloWorld {
+          void main() {
+              System.out.println("Hello, World!");
+          }
+      }
+      
+      // 进一步精简写法
+      void main() {
+         System.out.println("Hello, World!");
+      }
+      ```
+
+## JDK25
+
+- **ScopedValue** 作用域值
+  - 功能和 `ThreadLocal` 类似，但核心思想不同，**其存储的值并不绑定“线程”，而是绑定“作用域”**，因此当作用域走完，会自动接触绑定，而不需要手动 `remove()`
+  - ScopedValue 还具有**不可变**的性质，一旦绑定，后续在作用域内就只能读取而无法修改
+  - tip: 在 SpringBoot 项目中基本可以完全替代 `ThreadLocal`，但在其他领域，如果需求就是需要一个绑定于线程的值，或者绑定的线程的缓存等，则还是需要 `ThreadLocal`
+
+```java
+// 上下文类
+public final class UserContext {
+    private UserContext() {
+    }
+
+    // 一般定义为 static final
+    public static final ScopedValue<String> USER_ID = ScopedValue.newInstance();
+
+    // 通过 get() 方法获取值，如果调用的时候没有绑定值，则会抛异常
+    public static String getUserId() {
+        return USER_ID.get(); // 可以换成 orElse(null)，或 orElseThrow(..) 方法
+    }
+}
+
+// 在 Filter 中绑定作用域值
+@Component
+public class UserContextFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain)
+        throws ServletException, IOException {
+
+        String userId = request.getHeader("X-User-Id");
+
+        // where() 方法绑定作用域值，参数是 ScopedValue 对象 和 要绑定的值
+        // 若有多个要绑定的 ScopedValue 对象，则继续链式调用 where() 方法
+        // 绑定后，需要接 run() 或 call() 等方法，在这个方法的作用域内，ScopedValue 绑定的值会一直生效
+        ScopedValue.where(UserContext.USER_ID, userId)
+            .run(() -> {
+                try {
+                    filterChain.doFilter(request, response); // 将 doFilter() 放在作用域内
+                } catch (ServletException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+    }
+}
+
+// 在之后的任何地方都可以直接读取
+@RestController
+@RequestMapping("/user")
+public class UserController {
+    @GetMapping("/info")
+    public String info() {
+        String userId = UserContext.getUserId();
+        return "当前用户：" + userId;
+    }
+}
+
+// 相比 ThreadLocal，ScopedValue 还可以在线程中传递，包括虚拟线程
+ScopedValue.where(USER_ID, "10001")
+    .run(() -> {
+        Thread.startVirtualThread(() -> {
+            System.out.println(USER_ID.get());
+        });
+    });
+```
+
+- **紧凑对象头**
+  - 传统 64 位 HotSpot JVM 下，对象头通常是 **12～16 字节**，紧凑对象头机制通过重新布局，将其压缩到 **8 字节**
+  - 优化了“**大量小对象**的场景下的性能和内存占用
+  - 需要手动开启，不是默认特性
+
+
+
+# Project Valhalla
+
+> 是一个持续了十多年的 JVM/Java 语言大改造项目，截至 2026.8，仍然在开发中
+
+**核心目标**：让 Java 的“对象”拥有接近基本类型的性能，重点开发 “**Value Class**” 即“**值类**”
+
+- 现有的痛点例子
+  - 对于 `List<Integer>`，虽然底层是数组，但是因为实际上是一个指针(引用)的数组，实际遍历时并不是顺序遍历对象，而是在内存中零散地读取
+    - 如果可以做到跟 C++ 的结构体数组那样，在内存中连续存储，就可以充分发挥现代 CPU 的缓存功能，极大提高性能
+  - 对于一些只用来保存值的类，例如包装类`Integer`, `Long`等，还有自定义的例如`Point p = new Point(10, 20)` ，对象头的很多字段其实没有很大意义，并且比较的意义也不太合理，例如 `p1 == p2` 就算值一样也为 `false`
+
+此外还有一些其他的目标，例如让”**泛型擦除**“特性在底层有更清晰的表示、优化设计 `null` 类型等等
+
+
+
 # JVM
 
 ## 4种引用类型
@@ -6678,14 +7071,17 @@ Tomcat的类加载器`WebappClassLoader`会**首先自己尝试**从本应用的
 - **JDK 7:**
   - 默认使用Parallel Scavenge + Serial Old 组合
   - Scavenge `/ ˈskævɪndʒ /`
-- **JDK 8 及JDK 7u40 之后的版本:**
+- **JDK 8 及 JDK 7u40 之后的版本:**
   - 默认使用Parallel Scavenge + Parallel Old 组合。
-- **JDK 9 到JDK 17:**
+- **JDK 9 到 JDK 25:**
   - 默认使用G1
 
-各种垃圾收集器：
 
-- **串行垃圾收集器**
+
+各种垃圾收集器：串行、并行、CMS、G1、ZGC
+
+- **串行垃圾收集器**：Serial, Serial Old
+  
   - 分类
     - **Serial** 
       - 用于新生代
@@ -6696,7 +7092,7 @@ Tomcat的类加载器`WebappClassLoader`会**首先自己尝试**从本应用的
   - 垃圾回收时，**单线程**工作，并且java应用中的所有线程都要暂停(STW)，等待垃圾回收的完成；
   - 只适合个人电脑，不适合企业开发；
   - ![](image/jvm-垃圾回收-串行垃圾回收器.png)
-- **并行垃圾收集器**
+- **并行垃圾收集器**：Paraleel New, Parallel Scavenge, Parallel Old
   
   - 分类
     - **Parallel New** 
@@ -6730,11 +7126,14 @@ Tomcat的类加载器`WebappClassLoader`会**首先自己尝试**从本应用的
     - 它使用的回收算法-“标记-清除”算法会导致收集结束时会有大量空间碎片产生。
   - **tip：CMS 垃圾回收器在 Java 9 中已经被标记为过时(deprecated)，并在 Java 14 中被移除**
 - **G1 垃圾收集器**（JDK9之后默认）
+  
   - 应用于新生代和老年代，将堆内存分割为多个小区域，每个区域都可以充当 eden，survivor，old，humongous`(/hjuːˈmʌŋ.ɡəs/)`（其中 humongous 专为大对象准备，可以是连续的多个区域之类的）
   
     - 大对象在回收前永不移动，可能造成内存碎片
   - 响应时间与吞吐量兼顾
   - 采用**复制算法 + 标记整理算法** 
+    
+    - 标记使用的是“三色标记法”
     - 执行算法的时候是**需要STW**的
     - 对于年轻代：
       - 使用复制算法
@@ -6771,7 +7170,11 @@ Tomcat的类加载器`WebappClassLoader`会**首先自己尝试**从本应用的
   
       - 可以设置`-XX:InitiatingHeapOccupancyPercent=30`, 使得在堆占用较低时便开始并发标记，减少 Mixed GC 停顿时长，这里是设置为`30%`
 
-
+- **ZGC**
+  - JDK 17 时可用，初始版本没有分代回收，JDK 23 推出分代回收版，JDK 24 移除了非分代的版本，JDK 25 时推出稳定版
+  - 主要用于支持**超大堆**，例如大于 64GB 内存，并通过**并发**做到**极低的暂停时间**，通常小于 1ms
+  - 核心思想：
+    - 对象移动时，不阻塞应用线程（G1 是会的）
 
 ### 元空间垃圾回收
 
@@ -7445,311 +7848,6 @@ SSO（**S**ingle **S**ign **O**n）单点登录：用户只要登录一次，就
 原因：代码可能写得有问题（比如ThreadLocal内存泄漏），堆中的**对象越来越多**；对象多就可能导致出现并发失败的问题，触发FullGC（单线程，性能低），STW时间过长；或者是对象多的时候，并发标记/重新标记寻找root的时间也会变长；这样就会出现偶发的卡顿；
 
 同时，如果元空间的数据太多也会，例如Groovy脚本加载成Class文件并使用后未被卸载
-
-
-
-# JDK新特性
-
-没有记全，把重点的记一记
-
-## Java8
-
-2014年
-
-- lambda表达式
-- stream流
-- Optional 防止 NPE
-
-Java9
-
-2017年
-
-- 快速创建不可变集合
-
-  - ```java
-    List.of("Java", "C++");
-    Set.of("Java", "C++");
-    Map.of("Java", 1, "C++", 2);
-    ```
-
-- String存储优化
-
-  - 从`char[]`变为`byte[]`
-  - 具体看[字符串存储](#字符串存储)
-
-## Java10
-
-2018年
-
-- `var`局部变量推断
-
-  - ```java
-    var id = 0;
-    var codefx = new URL("https://mp.weixin.qq.com/");
-    var list = new ArrayList<>();
-    var list = List.of(1, 2, 3);
-    var map = new HashMap<String, String>();
-    var p = Paths.of("src/test/java/Java9FeaturesTest.java");
-    var numbers = List.of("a", "b", "c");
-    for (var n : list)
-        System.out.print(n+ " ");
-    ```
-
-- 拷贝出不可变集合
-
-  - ```java
-    List<Integer> list = List.of(1, 2, 3, 4, 5, 5, 6, 7);
-    List<Integer> copiedList = List.copyOf(list); // 无法做增删改
-    ```
-
-## Java14
-
-2020年
-
-- switch增强
-
-  - 在java12中提出，当时的预览版
-
-  - ```java
-    String result = switch (day) {
-        case "M", "W", "F" -> "MWF";
-        case "T", "TH", "S" -> "TTS";
-        default -> {
-            if (day.isEmpty())
-                yield "Please insert a valid day.";
-            else
-                yield "Looks like a Sunday.";
-        }
-    
-    };
-    System.out.println(result);
-    ```
-
-## Java15
-
-2020年
-
-- 文本快
-
-  - 在Java13中提出，当时是预览版
-
-  - ```java
-    // 支持用3个双引号引用一块多行文本
-    String json = """
-            {
-                "name":"mkyong",
-                "age":38
-            }
-            """;
-    ```
-
-## Java16
-
-2021年
-
-- instance of 模式匹配
-
-  - 在java12中提出，当时是预览版
-
-  - ```java
-    Object obj = "abcde";
-    if (obj instanceof String str) { // 在判断类型时可顺便声明一个强转类型后的变量
-        System.out.println(str); 
-    }
-    ```
-
-- 记录类
-
-  - 在java14中提出，当时是预览版
-
-  - ```java
-    // 传统方式
-    public class Person {
-        private final String name;
-        private final int age;
-        
-        public Person(String name, int age) {
-            this.name = name;
-            this.age = age;
-        }
-        
-        // 需要手动实现getter、equals、hashCode、toString...
-    }
-    
-    // Record方式
-    public record Person(String name, int age) {}
-    ```
-
-  - 编译器自动创建：
-
-    - 私有final字段
-    - 公共构造函数
-    - 访问器方法（`name()`, `age()`）
-    - 自动生成`equals()`, `hashCode()`, `toString()`
-
-## Java17
-
-2021年
-
-- 密封类
-
-  - ```java
-    // 允许一个类明确指定哪些其他类可以继承它，从而限制类的继承结构
-    public sealed class 父类 permits 子类1, 子类2, 子类3 {
-        // 类实现
-    }
-    ```
-
-## Java18
-
-2022年年
-
-- JDK 终于将 **UTF-8** 设置为默认字符集
-  - 在 Java 17 及更早版本中，默认字符集是在 Java 虚拟机运行时才确定的，取决于不同的操作系统、区域设置等因素；
-
-## Java21
-
-2023年
-
-- switch 支持 incetance of 模式匹配
-
-  - 在java17中提出，当时是预览版
-
-  - ```java
-    static String formatterPatternSwitch(Object o) {
-        return switch (o) {
-            case Integer i -> String.format("int %d", i);
-            case Long l    -> String.format("long %d", l);
-            case Double d  -> String.format("double %f", d);
-            case String s  -> String.format("String %s", s);
-            default        -> o.toString();
-        };
-    }
-    ```
-
-- 记录模式
-
-  - 在java19中提出，当时是预览版
-
-  - 配合 instance of 直接解构属性值
-
-  - ```java
-    record Point(int x, int y) {}
-    
-    // 传统方式
-    if (obj instanceof Point) {
-        Point p = (Point) obj;
-        System.out.println(p.x() + p.y());
-    }
-    
-    // 使用记录模式（Java 21）
-    if (obj instanceof Point(int x, int y)) {
-        System.out.println(x + y); // 直接使用解构出的变量
-    }
-    
-    // 在switch中使用
-    String result = switch (shape) {
-        case Circle(double radius) -> "圆形，半径: " + radius;
-        case Rectangle(double width, double height) -> "矩形，宽: " + width + " 高: " + height;
-        default -> "未知形状";
-    };
-    ```
-
-- 虚拟线程
-
-  - 在java19中提出，当时是预览版；
-
-  - Java虚拟线程是一种在Java虚拟机（JVM）层面实现的逻辑线程，不直接和操作系统的物理线程一一对应；是由**JVM管理**的轻量级线程，其创建和切换成本非常低，允许应用程序中创建大量的线程而不会耗尽系统资源；
-
-  - **载体线程(Carrier Thread)机制**：虚拟线程运行在少量的平台线程(称为载体线程)之上，当虚拟线程遇到阻塞操作(如I/O)时，JVM会自动将其挂起并释放载体线程，让其他虚拟线程使用；
-
-    - **非绑定式执行**：虚拟线程在运行周期内不依赖特定的操作系统线程，可以在不同的载体线程间迁移；
-
-  - **Spring Boot 3.2**正式集成了对虚拟线程的支持，要启用它需要将`spring.threads.virtual.enabled`属性设置为true，并使用JDK 21环境；
-
-    - Tomcat 10+版本已支持虚拟线程；默认情况下，Spring Boot 3.2会使用虚拟线程创建线程而不是传统的线程池；
-
-  - ![](image/虚拟线程.png)
-
-  - ```java
-    public class VirtualThreadExample {
-        public static void main(String[] args) {
-            
-            // startVirtualThread()方法
-            Thread.startVirtualThread(() -> {
-                System.out.println("Current thread: " + Thread.currentThread());
-            });
-            
-            // ofVirtual()方法，返回的是一个构造器Thread.Builder.OfVirtual
-            Thread.ofVirtual().start(() -> {
-                System.out.println("Using builder");
-            });
-            
-            // 虚拟线程池
-            try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-                executor.submit(() -> {
-                    System.out.println("Task running in virtual thread");
-                    return null;
-                });
-                // 注意：需要保持主线程存活，以便虚拟线程有机会执行
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            
-        }
-    }
-    ```
-
-- 预览特性
-
-  - 字符串模板
-
-    - 类似js的`Greetings ${ name }!`
-
-    - ```java
-      String message = STR."Greetings \{name}!";
-      ```
-
-  - 未命名模式
-
-    - 类似kotlin，可以使用下划线 `_` 表示未命名的变量以及模式匹配时不使用的组件
-
-    - ```java
-      try (var _ = ScopedContext.acquire()) {
-        // No use of acquired resource
-      }
-      try { ... }
-      catch (Exception _) { ... }
-      catch (Throwable _) { ... }
-      
-      for (int i = 0, _ = runOnce(); i < arr.length; i++) {
-        ...
-      }
-      ```
-
-  - 不定义类名的main方法
-
-    - ```java
-      // 原始写法
-      public class HelloWorld {
-          public static void main(String[] args) {
-              System.out.println("Hello, World!");
-          }
-      }
-      
-      // java21新特性写法
-      class HelloWorld {
-          void main() {
-              System.out.println("Hello, World!");
-          }
-      }
-      
-      // 进一步精简写法
-      void main() {
-         System.out.println("Hello, World!");
-      }
-      ```
 
 
 
